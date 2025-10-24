@@ -1,0 +1,7 @@
+services:
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"          # Host:Container port mapping
+    volumes:
+      - ./mongo-data:/data/db  # Host directory : Container directory
