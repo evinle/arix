@@ -52,8 +52,7 @@ export default defineConfig([
           "warn",
           {
             printWidth: 60,
-            lineBreakStyle: "windows",
-            classesPerLine: 4
+            lineBreakStyle: "windows"
           }
         ]
     },
