@@ -2,10 +2,21 @@ import React from "react";
 
 type BackgroundProps = {
   children?: React.ReactNode;
+  className?: string;
 };
-const Background: React.FC<BackgroundProps> = ({ children }) => {
+const Background: React.FC<BackgroundProps> = ({
+  children,
+  className
+}) => {
   return (
-    <div className="min-h-dvh h-dvh bg-gray-900 text-white">{children}</div>
+    <div
+      className={`
+        h-dvh min-h-dvh bg-gray-900 text-white
+        ${className}
+      `}
+    >
+      {children}
+    </div>
   );
 };
 

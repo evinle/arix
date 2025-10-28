@@ -7,23 +7,24 @@ const MenuItems: MenuItemConfig[] = [
   {
     id: "start",
     label: "Start Game",
-    onClick: () => console.log("Matchmaking started"),
+    onClick: () => console.log("Matchmaking started")
   },
   {
     id: "add-friends",
     label: "Add Friends",
-    onClick: () => console.log("Open Dialogue for new friends"),
+    onClick: () =>
+      console.log("Open Dialogue for new friends")
   },
   {
     id: "exit",
     label: "Exit",
-    onClick: () => console.log("Exiting"),
-  },
+    onClick: () => console.log("Exiting")
+  }
 ];
 function App() {
   return (
     <>
-      <Background>
+      <Background className="font-poppins">
         <CenterOnContainer className="flex-col">
           <Menu items={MenuItems}></Menu>
         </CenterOnContainer>
