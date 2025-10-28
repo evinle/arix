@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ArixBack")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c1d2822638729f6966332e48107f807d76cb6a9c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c4010e395edc594590aadfbf9d59cf3fa5d6761c")]
 [assembly: System.Reflection.AssemblyProductAttribute("ArixBack")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ArixBack")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

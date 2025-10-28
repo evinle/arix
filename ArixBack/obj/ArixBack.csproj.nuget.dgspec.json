@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/evinle/Documents/tcc/arix/ArixBack/ArixBack.csproj": {}
+    "C:\\Users\\gianq\\OneDrive\\Documents\\Arix\\arix\\ArixBack\\ArixBack.csproj": {}
   },
   "projects": {
-    "/Users/evinle/Documents/tcc/arix/ArixBack/ArixBack.csproj": {
+    "C:\\Users\\gianq\\OneDrive\\Documents\\Arix\\arix\\ArixBack\\ArixBack.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/evinle/Documents/tcc/arix/ArixBack/ArixBack.csproj",
+        "projectUniqueName": "C:\\Users\\gianq\\OneDrive\\Documents\\Arix\\arix\\ArixBack\\ArixBack.csproj",
         "projectName": "ArixBack",
-        "projectPath": "/Users/evinle/Documents/tcc/arix/ArixBack/ArixBack.csproj",
-        "packagesPath": "/Users/evinle/.nuget/packages/",
-        "outputPath": "/Users/evinle/Documents/tcc/arix/ArixBack/obj/",
+        "projectPath": "C:\\Users\\gianq\\OneDrive\\Documents\\Arix\\arix\\ArixBack\\ArixBack.csproj",
+        "packagesPath": "C:\\Users\\gianq\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\gianq\\OneDrive\\Documents\\Arix\\arix\\ArixBack\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/evinle/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\gianq\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -48,6 +48,10 @@
               "target": "Package",
               "version": "[9.0.10, )"
             },
+            "MongoDB.Driver": {
+              "target": "Package",
+              "version": "[3.5.0, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[9.0.6, )"
@@ -72,7 +76,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.306/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
