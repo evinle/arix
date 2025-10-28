@@ -1,3 +1,8 @@
+using ArixBack.Models;
+using ArixBack.Services;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -7,6 +12,23 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
+builder.Services.Configure<ArixDatabaseSettings>(
+    builder.Configuration.GetSection("ArixDatabase"));
+
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<ArixDatabaseSettings>>().Value;
+    return new MongoClient(settings.ConnectionString);
+});
+
+builder.Services.AddSingleton(sp =>
+{
+    var mongoClient = sp.GetRequiredService<IMongoClient>();
+    var settings = sp.GetRequiredService<IOptions<ArixDatabaseSettings>>().Value;
+    return mongoClient.GetDatabase(settings.DatabaseName);
+});
+
+builder.Services.AddSingleton<DatabaseService>();
 
 var app = builder.Build();
 
@@ -20,6 +42,9 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 app.UseHttpsRedirection();
+
+app.MapGet("/", () => "MongoDB connected!");
+
 app.Run();
 
 // var summaries = new[]
