@@ -1,4 +1,3 @@
-import pluginReact from "eslint-plugin-react";
 import tseslint from "typescript-eslint";
 import js from "@eslint/js";
 import eslintParserTypeScript from "@typescript-eslint/parser";
@@ -72,6 +71,5 @@ export default defineConfig([
   // tseslint.configs.recommended,
   {
     ...tseslint.configs.eslintRecommended
-  },
-  pluginReact.configs.flat.recommended
+  }
 ]);
