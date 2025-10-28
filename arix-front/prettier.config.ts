@@ -3,7 +3,8 @@ import { type Config } from "prettier";
 const config: Config = {
   trailingComma: "none",
   printWidth: 60,
-  plugins: ["prettier-plugin-tailwindcss", "prettier-plugin-organize-imports"],
+  endOfLine: "auto"
+  // plugins: ["prettier-plugin-tailwindcss"]
 };
 
 export default config;
