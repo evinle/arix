@@ -8,9 +8,18 @@ type MenuProps = {
 
 const Menu: React.FC<MenuProps> = ({ items }) => {
   return (
-    <div className="flex flex-col justify-between items-center h-1/4 min-h-36 min-w-1/2 rounded-xl border-2 border-blue-200 p-3 ">
+    <div
+      className={`
+        flex h-1/4 min-h-36 min-w-1/2 flex-col items-center
+        justify-between rounded-xl border-2 border-blue-200
+        p-3
+      `}
+    >
       {items.map((itemConfig) => (
-        <MenuItem key={itemConfig.id} config={itemConfig}></MenuItem>
+        <MenuItem
+          key={itemConfig.id}
+          config={itemConfig}
+        ></MenuItem>
       ))}
     </div>
   );
