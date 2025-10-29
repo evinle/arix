@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using ArixBack.Models;
 using System.Diagnostics;
 using System.Data.Common;
-
+using ArixBack.Services;
+using MongoDB.Driver;
+using System.Threading.Tasks;
 namespace ArixBack.Controllers
 {
     [ApiController]
@@ -10,30 +12,44 @@ namespace ArixBack.Controllers
     public class PlayerController : ControllerBase
     {
 
-        private static readonly List<Player> Players = new List<Player>
-        {
-            new Player{id = 0, username = "L", gold = 0},
-            new Player{id = 1, username = "La", gold = 0}
-        };
+        private PlayerService _db;
 
-        [HttpGet("GetAllPlayers")]
-        public ActionResult<List<Player>> GetAllPlayers()
+        public PlayerController(PlayerService db)
         {
-            return Ok(Players);
+            _db = db;
+        }
+        [HttpGet("GetAllPlayers")]
+        public async Task<ActionResult<List<Player>>> GetAllPlayers()
+        {
+
+            return Ok(await _db.GetPlayers());
         }
 
         [HttpGet("GetPlayer")]
-        public ActionResult<List<Player>> GetPlayers(int id)
+        public async Task<ActionResult<Player>> GetPlayers(int id)
         {
-            Player? player = Players.FirstOrDefault(x => x.id == id);
-
-            if (player == null)
-            {
-                return NotFound();
-            }
-            return Ok(player);
+            return Ok(await _db.GetPlayer(id));
         }
-
+        [HttpGet("CreatePlayer")]
+        public async Task<ActionResult> CreatePlayer(int id,string username, int gold)
+        {
+            Player player = new Player(id, username, gold);
+            await _db.CreatePlayer(player);
+            return Ok();
+        }
+        [HttpGet("UpdatePlayer")]
+        public async Task<ActionResult> UpdatePlayer(int id,string username, int gold)
+        {
+            Player player = new Player(id, username, gold);
+            await _db.UpdatePlayer(id, player);
+            return Ok();
+        }
+        [HttpGet("RemovePlayer")]
+        public async Task<ActionResult> RemovePlayer(int id)
+        {
+            await _db.RemovePlayer(id);
+            return Ok();
+        }
 
     }
 }

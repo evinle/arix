@@ -12,28 +12,41 @@ namespace ArixBack.Controllers
     [Route("Weapons")]
     public class WeaponController : ControllerBase
     {
-        private DatabaseService _db;
-        public WeaponController(DatabaseService db)
+        private WeaponService _db;
+        public WeaponController(WeaponService db)
         {
             _db = db;
         }
-        private static readonly List<Weapon> weapons = new List<Weapon>
+
+        [HttpGet("GetAllWeapons")]
+        public async Task<ActionResult<List<Weapon>>> GetAllWeapons()
         {
-            new Weapon{weaponId=1, weaponName = "la"},
-            new Weapon{weaponId=2, weaponName = "lala"}
-        };
-        
-        [HttpGet("GetAll")]
-        public ActionResult<List<Weapon>> GetAllPlayers()
+            return Ok(await _db.GetWeapons());
+        }
+        [HttpGet("GetWeapon")]
+        public async Task<ActionResult<Weapon>> GetWeapon(int id)
         {
-            return Ok(weapons);
+            return Ok(await _db.GetWeapon(id));
         }
 
-        [HttpPost("InsertWeapon")]
-        public async Task<ActionResult> InsertWeapon(int id, String weaponName)
+        [HttpPost("CreateWeapon")]
+        public async Task<ActionResult> InsertWeapon(int id, string weaponName)
         {
             Weapon weapon = new Weapon(id, weaponName);
             await _db.CreateWeapon(weapon);
+            return Ok();     
+        }
+        [HttpPost("UpdateWeapon")]
+        public async Task<ActionResult> UpdateWeapon(int id, string weaponName)
+        {
+            Weapon weapon = new Weapon(id, weaponName);
+            await _db.UpdateWeapon(id,weapon);
+            return Ok();     
+        }
+        [HttpPost("RemoveWeapon")]
+        public async Task<ActionResult> RemoveWeapon(int id)
+        {
+            await _db.RemoveWeapon(id);
             return Ok();     
         }
  

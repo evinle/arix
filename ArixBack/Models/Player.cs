@@ -9,8 +9,13 @@ namespace ArixBack.Models
 {
     public class Player
     {
+        public Player(int id,string username, int gold)
+        {
+            this.id = id;
+            this.username = username;
+            this.gold = gold;
+        }
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         public int id { get; set; }
         public string username { get; set; }
         public int gold { get; set; }
