@@ -5,14 +5,16 @@ type CenterOnContainerProps = {
   children?: React.ReactNode;
 };
 
-const CenterOnContainer: React.FC<CenterOnContainerProps> = ({
-  className,
-  children,
-}) => {
+const CenterOnContainer: React.FC<
+  CenterOnContainerProps
+> = ({ className, children }) => {
   return (
     <div
       className={
-        "w-full h-full flex justify-center items-center flex-1" + className
+        `
+          flex h-full w-full flex-1 items-center
+          justify-center
+        ` + className
       }
     >
       {children}
