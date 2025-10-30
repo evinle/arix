@@ -19,7 +19,14 @@ const MenuItem: React.FC<MenuItemProps> = ({ config }) => {
       `}
       onClick={config.onClick}
     >
-      {config.label}
+      <span
+        className={`
+          transition
+          active:scale-110
+        `}
+      >
+        {config.label}
+      </span>
     </div>
   );
 };
