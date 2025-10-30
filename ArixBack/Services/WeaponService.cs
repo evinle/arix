@@ -4,31 +4,37 @@ using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using ArixBack.Models;
+using MongoDB.Bson;
 
 namespace ArixBack.Services
 {
-    public class WeaponService
+    public class WeaponService(DatabaseService db)
     {
         
-        private DatabaseService _db;
-        public WeaponService(DatabaseService db)
-        {
-            _db = db;
-        }
+        private DatabaseService _db => db;
+        private IMongoCollection<Weapon> _weaponsCollection => db.GetWeaponCollection();
          public async Task<List<Weapon>> GetWeapons() =>
-            await _db.GetWeaponCollection().Find(_ => true).ToListAsync();
+            await _weaponsCollection.Find(_ => true).ToListAsync();
 
         public async Task<Weapon?> GetWeapon(int id) =>
-            await _db.GetWeaponCollection().Find(x => x.weaponId == id).FirstOrDefaultAsync();
+            await _weaponsCollection.Find(GetWeaponByIdFilter(id)).FirstOrDefaultAsync();
+        
 
         public async Task CreateWeapon(Weapon newWeapon) =>
             await _db.GetWeaponCollection().InsertOneAsync(newWeapon);
 
-        public async Task UpdateWeapon(int id, Weapon updatedWeapon) =>
-            await _db.GetWeaponCollection().ReplaceOneAsync(x => x.weaponId == id, updatedWeapon);
+        public async Task<bool> UpdateWeapon(int id, Weapon updatedWeapon)
+        {
+            var res = await _weaponsCollection.ReplaceOneAsync(GetWeaponByIdFilter(id), updatedWeapon);
+            return res.ModifiedCount > 0;
+        }
 
-        public async Task RemoveWeapon(int id) =>
-            await _db.GetWeaponCollection().DeleteOneAsync(x => x.weaponId == id);
+        public async Task<DeleteResult> RemoveWeapon(int id) =>
+            await _weaponsCollection.DeleteOneAsync(GetWeaponByIdFilter(id));
         
+        private static MongoDB.Driver.FilterDefinition<ArixBack.Models.Weapon> GetWeaponByIdFilter(int id)
+        {
+            return Builders<Weapon>.Filter.Eq(wep => wep.Id, id);  
+        }
     }
 }
