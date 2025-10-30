@@ -3,6 +3,7 @@ using ArixBack.Services;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -11,6 +12,15 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:5173", "http://localhost:*");
+                      });
+});
 
 builder.Services.Configure<ArixDatabaseSettings>(
     builder.Configuration.GetSection("ArixDatabase"));
@@ -39,9 +49,10 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.MapOpenApi(); 
+    app.MapOpenApi();
 }
 
+app.UseCors(MyAllowSpecificOrigins);
 app.MapControllers();
 app.UseHttpsRedirection();
 
