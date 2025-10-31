@@ -16,23 +16,23 @@ namespace ArixBack.Services
          public async Task<List<Weapon>> GetWeapons() =>
             await _weaponsCollection.Find(_ => true).ToListAsync();
 
-        public async Task<Weapon?> GetWeapon(int id) =>
+        public async Task<Weapon?> GetWeapon(string id) =>
             await _weaponsCollection.Find(GetWeaponByIdFilter(id)).FirstOrDefaultAsync();
         
 
         public async Task CreateWeapon(Weapon newWeapon) =>
             await _db.GetWeaponCollection().InsertOneAsync(newWeapon);
 
-        public async Task<bool> UpdateWeapon(int id, Weapon updatedWeapon)
+        public async Task<bool> UpdateWeapon(string id, Weapon updatedWeapon)
         {
             var res = await _weaponsCollection.ReplaceOneAsync(GetWeaponByIdFilter(id), updatedWeapon);
             return res.ModifiedCount > 0;
         }
 
-        public async Task<DeleteResult> RemoveWeapon(int id) =>
+        public async Task<DeleteResult> RemoveWeapon(string id) =>
             await _weaponsCollection.DeleteOneAsync(GetWeaponByIdFilter(id));
         
-        private static MongoDB.Driver.FilterDefinition<ArixBack.Models.Weapon> GetWeaponByIdFilter(int id)
+        private static MongoDB.Driver.FilterDefinition<ArixBack.Models.Weapon> GetWeaponByIdFilter(string id)
         {
             return Builders<Weapon>.Filter.Eq(wep => wep.Id, id);  
         }

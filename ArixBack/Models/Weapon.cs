@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -12,7 +13,10 @@ namespace ArixBack.Models
     {
 
         [BsonId]
-        public int Id { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public string? Id { get; set; }
+
 
         [BsonElement("weaponName")]
         [JsonPropertyName("weaponName")]
@@ -23,14 +27,5 @@ namespace ArixBack.Models
         }
     }
 
-    // public class WeaponWithOid: Weapon
-    // {
-    //     [BsonId]
-    //     [BsonElement("_id")]
-    //     public ObjectId? Id { get; set; }
 
-    //     public WeaponWithOid(): base()
-    //     {
-    //     }
-    // }
 }

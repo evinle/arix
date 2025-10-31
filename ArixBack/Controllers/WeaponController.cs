@@ -22,7 +22,7 @@ namespace ArixBack.Controllers
         }
 
         [HttpGet("GetWeapon")]
-        public async Task<ActionResult<Weapon>> GetWeapon(int id)
+        public async Task<ActionResult<Weapon>> GetWeapon(string id)
         {
             var wep = await _weaponService.GetWeapon(id);
 
@@ -32,10 +32,11 @@ namespace ArixBack.Controllers
         }
 
         [HttpPost("CreateWeapon")]
-        public async Task<ActionResult> InsertWeapon([FromBody] Weapon newWeapon)
+        public async Task<ActionResult> InsertWeapon(Weapon newWeapon)
         {
             if (newWeapon == null) return BadRequest("No Weapon provided");
- 
+
+            newWeapon.Id = null;
             await _weaponService.CreateWeapon(newWeapon);
             return Ok();     
         }
@@ -52,7 +53,7 @@ namespace ArixBack.Controllers
             return NoContent();     
         }
         [HttpPost("RemoveWeapon")]
-        public async Task<ActionResult> RemoveWeapon(int id)
+        public async Task<ActionResult> RemoveWeapon(string id)
         {
             var deletedRow = await _weaponService.RemoveWeapon(id);
 
