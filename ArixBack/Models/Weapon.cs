@@ -14,7 +14,6 @@ namespace ArixBack.Models
 
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string? Id { get; set; }
 
 
