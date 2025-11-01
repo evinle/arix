@@ -3,6 +3,7 @@ import Background from "./components/Containers/Background";
 import CenterOnContainer from "./components/Containers/CenterOnContainer";
 import Menu from "./components/Menu/Menu";
 import type { MenuItemConfig } from "./components/Menu/MenuItem.type";
+import type { Weapon } from "./apiTypes/weapons.type";
 
 //   {
 //   defaultOptions: {
@@ -48,7 +49,7 @@ function App() {
       const res = await fetch(
         "http://localhost:5115/Weapons/GetAllWeapons"
       );
-      if (res.ok) return (await res.json()) as any[];
+      if (res.ok) return (await res.json()) as Weapon[];
       throw new Error("failed to fetch");
     },
     select: (d) => d,
