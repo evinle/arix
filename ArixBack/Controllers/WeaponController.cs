@@ -35,6 +35,7 @@ namespace ArixBack.Controllers
         public async Task<ActionResult> InsertWeapon(Weapon newWeapon)
         {
             if (newWeapon == null) return BadRequest("No Weapon provided");
+            newWeapon.Id = null;
 
             await _WeaponService.CreateWeapon(newWeapon);
             return Ok();
@@ -44,6 +45,7 @@ namespace ArixBack.Controllers
         {
 
             if (wep == null) return BadRequest("No Weapon provided");
+            if (wep.Id == null) return BadRequest("Id not provided");
 
             var updatedRow = await _WeaponService.UpdateWeapon(wep.Id, wep);
 
