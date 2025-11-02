@@ -4,21 +4,16 @@ import CenterOnContainer from "./components/Containers/CenterOnContainer";
 import Menu from "./components/Menu/Menu";
 import type { MenuItemConfig } from "./components/Menu/MenuItem.type";
 import type { Weapon } from "./apiTypes/weapons.type";
-
-//   {
-//   defaultOptions: {
-//     queries: {
-//       gcTime: 1000 * 60 * 60 * 24 // 24 hours
-//     }
-//   }
-// }
+import { Route, Routes, useNavigate } from "react-router";
+import MenuItem from "./components/Menu/MenuItem";
 
 function App() {
+  const navigate = useNavigate();
   const MenuItems: MenuItemConfig[] = [
     {
       id: "start",
       label: "Start Game",
-      onClick: () => console.log("Matchmaking started")
+      onClick: () => navigate("/game")
     },
     {
       id: "add-friends",
@@ -52,23 +47,57 @@ function App() {
       if (res.ok) return (await res.json()) as Weapon[];
       throw new Error("failed to fetch");
     },
-    select: (d) => d,
+    staleTime: () => 1,
+    gcTime: 0,
     enabled: false
   });
 
-  if (isPending && isFetching) return <div>Loading...</div>;
-  if (isError) return <div>Something went wrong :(...</div>;
+  function renderDebugWeapons() {
+    if (isPending && isFetching)
+      return <div>Loading...</div>;
+    if (isError)
+      return <div>Something went wrong :(...</div>;
+    return (
+      <ul>
+        {weaponsQuery?.map((w) => (
+          <li key={w.id}>{JSON.stringify(w)}</li>
+        ))}
+      </ul>
+    );
+  }
 
+  const routes = (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <CenterOnContainer className={`flex-col`}>
+            {renderDebugWeapons()}
+            <Menu items={MenuItems}></Menu>
+          </CenterOnContainer>
+        }
+      ></Route>
+
+      <Route
+        path="/game"
+        element={
+          <CenterOnContainer className={`flex-col`}>
+            Game Page
+            <MenuItem
+              config={{
+                id: "back",
+                label: "Back",
+                onClick: () => navigate("/")
+              }}
+            ></MenuItem>
+          </CenterOnContainer>
+        }
+      ></Route>
+    </Routes>
+  );
   return (
     <Background className="font-poppins">
-      <CenterOnContainer className="flex-col">
-        <ul>
-          {weaponsQuery?.map((w) => (
-            <li key={w.id}>{JSON.stringify(w)}</li>
-          ))}
-        </ul>
-        <Menu items={MenuItems}></Menu>
-      </CenterOnContainer>
+      {routes}
     </Background>
   );
 }
