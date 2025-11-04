@@ -2,6 +2,10 @@ using ArixBack.Models;
 using ArixBack.Services;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
@@ -41,6 +45,59 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton<DatabaseService>();
 builder.Services.AddSingleton<WeaponService>();
 builder.Services.AddSingleton<PlayerService>();
+
+//authorization for swagger - can be removed later
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "Enter your Bearer token in the format **'Bearer {your token}'**"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+});
+
+builder.Services.AddAuthentication()
+.AddJwtBearer("some-scheme", jwtOptions =>
+{
+    jwtOptions.MetadataAddress = builder.Configuration["Api:MetadataAddress"];
+    jwtOptions.Authority = builder.Configuration["Api:Authority"];
+    jwtOptions.Audience = builder.Configuration["Api:Audience"];
+    jwtOptions.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+
+    jwtOptions.MapInboundClaims = false;
+});
+
+
+
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
