@@ -6,6 +6,7 @@ using ArixBack.Services;
 using MongoDB.Driver;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using MongoDB.Bson;
 namespace ArixBack.Controllers
 {
     [Authorize]
@@ -30,13 +31,15 @@ namespace ArixBack.Controllers
         [HttpGet("GetPlayer")]
         public async Task<ActionResult<Player>> GetPlayer(string id)
         {
-            Player player = await _db.GetPlayer(id);
+            var player = await _db.GetPlayer(id);
             if(player == null) return NotFound($"No player with ID: {id}");
             return Ok(player);
         }
         [HttpPost("CreatePlayer")]
         public async Task<ActionResult> CreatePlayer(Player player)
         {
+            if (player == null) return BadRequest("No player provided");
+
             player.Id = null;
             await _db.CreatePlayer(player);
             return Ok();
@@ -44,15 +47,16 @@ namespace ArixBack.Controllers
         [HttpPost("UpdatePlayer")]
         public async Task<ActionResult> UpdatePlayer(Player player)
         {
-           
+            if (player == null || player.Id == null) return BadRequest("Invalid player");
             await _db.UpdatePlayer(player.Id, player);
             return Ok();
         }
         [HttpPost("RemovePlayer")]
             public async Task<ActionResult> RemovePlayer(string id)
         {
-            await _db.RemovePlayer(id);
-            return Ok();
+            var deletedRow = await _db.RemovePlayer(id);
+            if (deletedRow.DeletedCount == 0) return BadRequest($"Could not delete player with ID: {id}");
+            return Ok(deletedRow.ToJson());
         }
 
     }

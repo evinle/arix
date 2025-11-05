@@ -25,7 +25,7 @@ namespace ArixBack.Services
         public async Task UpdatePlayer(string id, Player updatedplayer) =>
             await _db.GetPlayerCollection().ReplaceOneAsync(GetPlayerByIdFilter(id), updatedplayer);
 
-        public async Task RemovePlayer(string id) =>
+        public async Task<DeleteResult> RemovePlayer(string id) =>
             await _db.GetPlayerCollection().DeleteOneAsync(GetPlayerByIdFilter(id));
 
             private static MongoDB.Driver.FilterDefinition<Player> GetPlayerByIdFilter(string id)
