@@ -23,8 +23,6 @@ namespace ArixBack.Controllers
         {
             if (ValidUserName(login.Username) && ValidPassword(login.Password) && ValidEmail(login.Email))
             {
-                //Hash does not work properly
-                //Player player = new Player(login.Username, login.Email, Argon2.Hash(login.Password));
                 await _db.Register(login);
                 return Ok();
             }
@@ -34,8 +32,15 @@ namespace ArixBack.Controllers
         [HttpPost("Login")]
         public async Task<IActionResult> Login(LoginModel login)
         {
-            
-            return Ok(await _db.Login(login));
+
+            return await _db.Login(login);
+        }
+
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword(LoginModel login)
+        {
+            //need to implement checks
+            return await _db.ChangePassword(login);
         }
         private bool ValidUserName(string username)
         {
@@ -49,15 +54,8 @@ namespace ArixBack.Controllers
         }
         private bool ValidEmail(string email)
         {
+            //send email confirmation?
             return true;
         }
-        private string HashPassword(string pwd)
-        {
-            
-            return Argon2.Hash(pwd);
-
-        }
-        
-
     }
 }

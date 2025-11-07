@@ -39,6 +39,19 @@ public class TokenProvider : ControllerBase
         return Ok();
     }
 
+    public async Task<IActionResult> ChangePassword(LoginModel login)
+    {
+        Player? player = await _db.GetPlayerFromUsername(login.Username);
+        if (player != null && player.Id!=null)
+        {
+            player.Password = Argon2.Hash(login.Password);
+            await _db.UpdatePlayer(player.Id, player);
+
+            return Ok(new { player });
+        }
+        return Forbid();
+    }
+
     private string GenerateJwtToken(string username)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
