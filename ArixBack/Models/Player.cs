@@ -12,19 +12,32 @@ namespace ArixBack.Models
     {
       
 
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; set; }
+      [BsonId]
+      [BsonRepresentation(BsonType.ObjectId)]
+      public string? Id { get; set; }
 
-        [BsonElement("username")]
-        [JsonPropertyName("username")]
-        public required string Username { get; set; }
+      [BsonElement("username")]
+      [JsonPropertyName("username")]
+      public string Username { get; set; }
 
-        [BsonElement("gold")]
-        [JsonPropertyName("gold")]
-        public int Gold { get; set; }
-          public Player()
-        {
-        }
+      [BsonElement("gold")]
+      [JsonPropertyName("gold")]
+      public int Gold { get; set; }
+      
+
+      [BsonElement("email")]
+      [JsonPropertyName("email")]
+      public string Email { get; set; }
+      
+      [BsonElement("password")]
+      [JsonPropertyName("password")]
+      public string Password { get; set; }
+      public Player(string username, string email, string password)
+      {
+        Username = username;
+        Gold = 0;
+        Email = email;
+        Password = password;
+      }
     }
 }
