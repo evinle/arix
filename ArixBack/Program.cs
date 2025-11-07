@@ -45,6 +45,7 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton<DatabaseService>();
 builder.Services.AddSingleton<WeaponService>();
 builder.Services.AddSingleton<PlayerService>();
+builder.Services.AddSingleton<TokenProvider>();
 
 //authorization for swagger - can be removed later
 builder.Services.AddSwaggerGen(c =>

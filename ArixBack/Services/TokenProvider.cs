@@ -4,27 +4,39 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ArixBack.Models;
+using ArixBack.Services;
+using Microsoft.VisualBasic;
+using Isopoh.Cryptography.Argon2;
 
-[ApiController]
-[Route("api/[controller]")]
 public class TokenProvider : ControllerBase
 {
+   
     private readonly IConfiguration _config;
-
-    public TokenProvider(IConfiguration config)
+    private PlayerService _db;
+    public TokenProvider(IConfiguration config, PlayerService db)
     {
         _config = config;
+        _db = db;
     }
 
-    [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginModel login)
+    public async Task<IActionResult> Login(LoginModel login)
     {
-        if (login.Username == "1" && login.Password == "lalala")
+        var player = await _db.GetPlayerFromUsername(login.Username);
+        
+        if (player!=null && Argon2.Verify(player.Password,login.Password))
         {
             var token = GenerateJwtToken(login.Username);
             return Ok(new { token });
         }
+
         return Unauthorized();
+    }
+
+    public async Task<IActionResult> Register(LoginModel login)
+    {
+        Player player = new Player(login.Username, login.Email, Argon2.Hash(login.Password));
+        await _db.CreatePlayer(player);
+        return Ok();
     }
 
     private string GenerateJwtToken(string username)
