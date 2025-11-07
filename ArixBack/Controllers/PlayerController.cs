@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using MongoDB.Bson;
 namespace ArixBack.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [ApiController]
     [Route("/players")]
     public class PlayerController : ControllerBase
@@ -28,11 +28,20 @@ namespace ArixBack.Controllers
             return Ok(await _db.GetPlayers());
         }
 
-        [HttpGet("GetPlayer")]
-        public async Task<ActionResult<Player>> GetPlayer(string id)
+        [HttpGet("GetPlayerFromId")]
+        public async Task<ActionResult<Player>> GetPlayerFromId(string id)
         {
-            var player = await _db.GetPlayer(id);
-            if(player == null) return NotFound($"No player with ID: {id}");
+            var player = await _db.GetPlayerFromId(id);
+            if (player == null) return NotFound($"No player with ID: {id}");
+            return Ok(player);
+        }
+
+
+        [HttpGet("GetPlayerFromUsername")]
+        public async Task<ActionResult<Player>> GetPlayerFromUsername(string username)
+        {
+            var player = await _db.GetPlayerFromUsername(username);
+            if (player == null) return NotFound($"No player with ID: {username}");
             return Ok(player);
         }
         [HttpPost("CreatePlayer")]
