@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.Google;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
@@ -59,7 +60,6 @@ builder.Services.AddSwaggerGen(c =>
         BearerFormat = "JWT",
         Description = "Enter your Bearer token in the format **'Bearer {your token}'**"
     });
-
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -74,6 +74,7 @@ builder.Services.AddSwaggerGen(c =>
             new string[] { }
         }
     });
+    
 });
 
 builder.Services.AddAuthentication()
@@ -95,12 +96,27 @@ builder.Services.AddAuthentication()
     jwtOptions.MapInboundClaims = false;
 });
 
+builder.Services
+.AddAuthentication()
+.AddCookie(options => {
+    options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
+})
+.AddGoogle(googleOptions =>
+{
+    googleOptions.ClientId = builder.Configuration["Authentication:Google:Client_id"];
+    googleOptions.ClientSecret = builder.Configuration["Authentication:Google:Client_secret"];
+});
+Console.WriteLine(builder.Configuration["Authentication:Google:Client_id"]);
+Console.WriteLine(builder.Configuration["Authentication:Google:Client_secret"]);
 
 
 
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -117,28 +133,3 @@ app.UseHttpsRedirection();
 app.MapGet("/", () => "MongoDB connected!");
 
 app.Run();
-
-// var summaries = new[]
-// {
-//     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-// };
-
-// app.MapGet("/weatherforecast", () =>
-// {
-//     var forecast =  Enumerable.Range(1, 5).Select(index =>
-//         new WeatherForecast
-//         (
-//             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-//             Random.Shared.Next(-20, 55),
-//             summaries[Random.Shared.Next(summaries.Length)]
-//         ))
-//         .ToArray();
-//     return forecast;
-// })
-// .WithName("GetWeatherForecast");
-
-
-// record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-// {
-//     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-// }

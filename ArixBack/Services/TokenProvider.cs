@@ -7,10 +7,13 @@ using ArixBack.Models;
 using ArixBack.Services;
 using Microsoft.VisualBasic;
 using Isopoh.Cryptography.Argon2;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 public class TokenProvider : ControllerBase
 {
-   
+
     private readonly IConfiguration _config;
     private PlayerService _db;
     public TokenProvider(IConfiguration config, PlayerService db)
@@ -19,11 +22,38 @@ public class TokenProvider : ControllerBase
         _db = db;
     }
 
+    [HttpGet("signin-google")]
+    public IActionResult SignInWithGoogle()
+    {
+        var redirectUrl = Url.Action("callback-google", "Account", null, Request.Scheme);
+        var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+    }
+
+    // http://localhost:5115/callback-google
+    [HttpGet("callback-google")]
+    public async Task<IActionResult> CallbackFromGoogle()
+    {
+       // Authenticate using the temporary cookie
+    var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+    if (!result.Succeeded)
+        return BadRequest("Login failed");
+
+    // Optional: access claims
+    var claims = result.Principal!.Claims;
+
+    // Sign in user for your own app session
+    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, result.Principal!, result.Properties);
+
+    return RedirectToAction("Index", "Home"); 
+    }
+
     public async Task<IActionResult> Login(LoginModel login)
     {
         var player = await _db.GetPlayerFromUsername(login.Username);
-        
-        if (player!=null && Argon2.Verify(player.Password,login.Password))
+
+        if (player != null && Argon2.Verify(player.Password, login.Password))
         {
             var token = GenerateJwtToken(login.Username);
             return Ok(new { token });
@@ -42,7 +72,7 @@ public class TokenProvider : ControllerBase
     public async Task<IActionResult> ChangePassword(LoginModel login)
     {
         Player? player = await _db.GetPlayerFromUsername(login.Username);
-        if (player != null && player.Id!=null)
+        if (player != null && player.Id != null)
         {
             player.Password = Argon2.Hash(login.Password);
             await _db.UpdatePlayer(player.Id, player);
@@ -73,6 +103,6 @@ public class TokenProvider : ControllerBase
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-    
+
 
 }
