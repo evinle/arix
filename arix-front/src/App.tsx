@@ -27,6 +27,13 @@ function App() {
       onClick: () => refetch()
     },
     {
+      id: "login",
+      label: "Test Login",
+      onClick: () =>
+        (window.location.href =
+          "http://localhost:5115/signin-google")
+    },
+    {
       id: "exit",
       label: "Exit",
       onClick: () => console.log("Exiting")
