@@ -1,11 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
+import {
+  Route,
+  Routes,
+  useLocation,
+  useNavigate
+} from "react-router";
+import type { Weapon } from "./apiTypes/weapons.type";
 import Background from "./components/Containers/Background";
 import CenterOnContainer from "./components/Containers/CenterOnContainer";
 import Menu from "./components/Menu/Menu";
-import type { MenuItemConfig } from "./components/Menu/MenuItem.type";
-import type { Weapon } from "./apiTypes/weapons.type";
-import { Route, Routes, useNavigate } from "react-router";
 import MenuItem from "./components/Menu/MenuItem";
+import type { MenuItemConfig } from "./components/Menu/MenuItem.type";
+import { useEffect } from "react";
+
+const GetJWT: React.FC = () => {
+  const navigate = useNavigate();
+  const { search } = useLocation();
+  const queryParams = new URLSearchParams(search);
+
+  // Example: get "code" param
+  const jwt = queryParams.get("code");
+
+  console.log("jwt", jwt);
+
+  if (jwt) localStorage.setItem("jwt", jwt);
+  navigate("/");
+  return <></>;
+};
 
 function App() {
   const navigate = useNavigate();
@@ -29,9 +50,10 @@ function App() {
     {
       id: "login",
       label: "Test Login",
-      onClick: () =>
-        (window.location.href =
-          "http://localhost:5115/signin-google")
+      onClick: () => {
+        window.location.href =
+          "http://localhost:5115/oauth";
+      }
     },
     {
       id: "exit",
@@ -59,6 +81,17 @@ function App() {
     enabled: false
   });
 
+  const { search } = useLocation();
+  const queryParams = new URLSearchParams(search);
+
+  // Example: get "code" param
+  const jwt = queryParams.get("code");
+
+  useEffect(() => {
+    console.log("jwt", jwt, localStorage.getItem("jwt"));
+  }, [jwt]);
+
+  if (jwt) localStorage.setItem("jwt", jwt);
   function renderDebugWeapons() {
     if (isPending && isFetching)
       return <div>Loading...</div>;
@@ -73,12 +106,28 @@ function App() {
     );
   }
 
+  const { data, isLoading } = useQuery({
+    queryKey: ["me"],
+    queryFn: async () =>
+      (
+        await fetch("http://localhost:5115/me", {
+          headers: {
+            Authorization:
+              "Bearer " + localStorage.getItem("jwt")
+          }
+        })
+      ).json()
+  });
+
   const routes = (
     <Routes>
       <Route
         path="/"
         element={
           <CenterOnContainer className={`flex-col`}>
+            {isLoading
+              ? "Loading user info"
+              : JSON.stringify(data)}
             {renderDebugWeapons()}
             <Menu items={MenuItems}></Menu>
           </CenterOnContainer>
@@ -100,8 +149,13 @@ function App() {
           </CenterOnContainer>
         }
       ></Route>
+      <Route
+        path="/jwtCallback"
+        element={<GetJWT />}
+      ></Route>
     </Routes>
   );
+
   return (
     <Background className="font-poppins">
       {routes}

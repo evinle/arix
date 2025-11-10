@@ -1,52 +1,73 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using ArixBack.Models;
 using ArixBack.Services;
-using Microsoft.VisualBasic;
 using Isopoh.Cryptography.Argon2;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.ObjectPool;
+using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
 
 public class TokenProvider : ControllerBase
 {
-
     private readonly IConfiguration _config;
     private PlayerService _db;
+
     public TokenProvider(IConfiguration config, PlayerService db)
     {
         _config = config;
         _db = db;
     }
 
-    [HttpGet("signin-google")]
-    public IActionResult SignInWithGoogle()
+    [HttpGet("oauth")]
+    public IActionResult Oauth()
     {
-        var redirectUrl = Url.Action("callback-google", "Account", null, Request.Scheme);
+        var redirectUrl = Url.Action("ReturnToUser");
         var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+
         return Challenge(properties, GoogleDefaults.AuthenticationScheme);
     }
 
-    // http://localhost:5115/callback-google
     [HttpGet("callback-google")]
-    public async Task<IActionResult> CallbackFromGoogle()
+    public async Task<IActionResult> ReturnToUser()
     {
-       // Authenticate using the temporary cookie
-    var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        // Authenticate using the temporary cookie
+        var result = await HttpContext.AuthenticateAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme
+        );
 
-    if (!result.Succeeded)
-        return BadRequest("Login failed");
+        if (!result.Succeeded)
+            return BadRequest("Login failed");
 
-    // Optional: access claims
-    var claims = result.Principal!.Claims;
+        // Get claims from the external login
+        var user = result.Principal!.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
+        var name = result.Principal!.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
 
-    // Sign in user for your own app session
-    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, result.Principal!, result.Properties);
+        // Generate JWT
+        var token = GenerateJwtToken(user);
 
-    return RedirectToAction("Index", "Home"); 
+        // Optionally, clear the temp cookie
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        // Return JWT to frontend (as JSON)
+        return Redirect($"http://localhost:5173/jwtCallback?code={token}");
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpGet("me")]
+    public IActionResult GetMe()
+    {
+        var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var email = User.FindFirstValue(JwtRegisteredClaimNames.Email);
+        return Ok(new { userId, email });
     }
 
     public async Task<IActionResult> Login(LoginModel login)
@@ -82,15 +103,15 @@ public class TokenProvider : ControllerBase
         return Forbid();
     }
 
-    private string GenerateJwtToken(string username)
+    private string GenerateJwtToken(string email)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.Name, username),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
 
         var token = new JwtSecurityToken(
@@ -103,6 +124,4 @@ public class TokenProvider : ControllerBase
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-
-
 }
