@@ -5,8 +5,11 @@ using System.Data.Common;
 using ArixBack.Services;
 using MongoDB.Driver;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using MongoDB.Bson;
 namespace ArixBack.Controllers
 {
+    //[Authorize]
     [ApiController]
     [Route("/players")]
     public class PlayerController : ControllerBase
@@ -25,30 +28,44 @@ namespace ArixBack.Controllers
             return Ok(await _db.GetPlayers());
         }
 
-        [HttpGet("GetPlayer")]
-        public async Task<ActionResult<Player>> GetPlayers(int id)
+        [HttpGet("GetPlayerFromId")]
+        public async Task<ActionResult<Player>> GetPlayerFromId(string id)
         {
-            return Ok(await _db.GetPlayer(id));
+            var player = await _db.GetPlayerFromId(id);
+            if (player == null) return NotFound($"No player with ID: {id}");
+            return Ok(player);
         }
-        [HttpGet("CreatePlayer")]
-        public async Task<ActionResult> CreatePlayer(int id,string username, int gold)
+
+
+        [HttpGet("GetPlayerFromUsername")]
+        public async Task<ActionResult<Player>> GetPlayerFromUsername(string username)
         {
-            Player player = new Player(id, username, gold);
+            var player = await _db.GetPlayerFromUsername(username);
+            if (player == null) return NotFound($"No player with ID: {username}");
+            return Ok(player);
+        }
+        [HttpPost("CreatePlayer")]
+        public async Task<ActionResult> CreatePlayer(Player player)
+        {
+            if (player == null) return BadRequest("No player provided");
+
+            player.Id = null;
             await _db.CreatePlayer(player);
             return Ok();
         }
-        [HttpGet("UpdatePlayer")]
-        public async Task<ActionResult> UpdatePlayer(int id,string username, int gold)
+        [HttpPost("UpdatePlayer")]
+        public async Task<ActionResult> UpdatePlayer(Player player)
         {
-            Player player = new Player(id, username, gold);
-            await _db.UpdatePlayer(id, player);
+            if (player == null || player.Id == null) return BadRequest("Invalid player");
+            await _db.UpdatePlayer(player.Id, player);
             return Ok();
         }
-        [HttpGet("RemovePlayer")]
-        public async Task<ActionResult> RemovePlayer(int id)
+        [HttpPost("RemovePlayer")]
+            public async Task<ActionResult> RemovePlayer(string id)
         {
-            await _db.RemovePlayer(id);
-            return Ok();
+            var deletedRow = await _db.RemovePlayer(id);
+            if (deletedRow.DeletedCount == 0) return BadRequest($"Could not delete player with ID: {id}");
+            return Ok(deletedRow.ToJson());
         }
 
     }

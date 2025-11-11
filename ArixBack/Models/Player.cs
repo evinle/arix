@@ -4,20 +4,40 @@ using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
 namespace ArixBack.Models
 {
     public class Player
     {
-        public Player(int id,string username, int gold)
-        {
-            this.id = id;
-            this.username = username;
-            this.gold = gold;
-        }
-        [BsonId]
-        public int id { get; set; }
-        public string username { get; set; }
-        public int gold { get; set; }
+      
+
+      [BsonId]
+      [BsonRepresentation(BsonType.ObjectId)]
+      public string? Id { get; set; }
+
+      [BsonElement("username")]
+      [JsonPropertyName("username")]
+      public string Username { get; set; }
+
+      [BsonElement("gold")]
+      [JsonPropertyName("gold")]
+      public int Gold { get; set; }
+      
+
+      [BsonElement("email")]
+      [JsonPropertyName("email")]
+      public string Email { get; set; }
+      
+      [BsonElement("password")]
+      [JsonPropertyName("password")]
+      public string Password { get; set; }
+      public Player(string username, string email, string password)
+      {
+        Username = username;
+        Gold = 0;
+        Email = email;
+        Password = password;
+      }
     }
 }

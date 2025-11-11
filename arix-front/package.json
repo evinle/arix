@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently --handle-input --names front,back,db \"npm run dev:front\" \"npm run dev:back\" \"docker-compose -f ../docker-compose.yml up\" --kill-others",
+    "dev": "concurrently --handle-input --names front,back,db --default-input-target back \"npm run dev:front\" \"npm run dev:back\" \"docker-compose -f ../docker-compose.yml up\" --kill-others",
     "dev:front": "vite",
     "dev:back": "dotnet watch run --project ../ArixBack",
     "build": "tsc -b && vite build",
