@@ -7,7 +7,8 @@ export const useUser = (): {
   isError: boolean;
   user: UserProperties;
 } => {
-  const jwtInLocalStorage = useLocalStorage("jwt");
+  const { value: jwtInLocalStorage } =
+    useLocalStorage<string>("jwt");
 
   const { data, isLoading, isError } = useQuery<{
     id: string;
@@ -16,15 +17,20 @@ export const useUser = (): {
     picture: string;
   }>({
     queryKey: ["me", jwtInLocalStorage],
-    queryFn: async () =>
-      (
-        await fetch("http://localhost:5115/me", {
+    queryFn: async () => {
+      const meQueryResult = await fetch(
+        "http://localhost:5115/me",
+        {
           headers: {
             Authorization: "Bearer " + jwtInLocalStorage
           }
-        })
-      ).json()
+        }
+      );
+      return meQueryResult.json();
+    },
+    enabled: jwtInLocalStorage != null
   });
+  // console.log(isError, error);
 
   return {
     isLoading,

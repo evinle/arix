@@ -1,9 +1,39 @@
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { useUser } from "../../hooks/useUser";
 
 type TopBarProps = {};
 const TopBar: React.FC<TopBarProps> = () => {
   const { user } = useUser();
+  const { value: jwtToken, unset } =
+    useLocalStorage<string>("jwt");
+  const isLoggedIn = user != null && jwtToken != null;
 
+  const UserAvatar = (
+    <div
+      className={`
+        aspect-square w-14 cursor-pointer rounded-full
+      `}
+    >
+      <button
+        className={`
+          aspect-square w-14 cursor-pointer rounded-full
+          bg-gray-500
+          active:translate-0.5 active:scale-95
+          active:bg-gray-900 active:outline-1
+          active:outline-white
+        `}
+      >
+        {user.picture && (
+          <img
+            src={user.picture}
+            className={`
+              aspect-square w-14 rounded-full object-fill
+            `}
+          />
+        )}
+      </button>
+    </div>
+  );
   return (
     <nav
       className={`
@@ -26,33 +56,48 @@ const TopBar: React.FC<TopBarProps> = () => {
         <div
           className={`flex w-full items-center justify-end`}
         >
-          <div
-            className={`
-              aspect-square w-14 cursor-pointer rounded-full
-            `}
-          >
+          {isLoggedIn ? (
+            <>
+              {UserAvatar}
+              <button
+                className={`
+                  ml-2 flex cursor-pointer items-center
+                  justify-center rounded-xl bg-blue-900 p-2
+                  font-bold uppercase transition select-none
+                  active:hover:translate-0.5
+                  active:hover:scale-95
+                  active:hover:bg-gray-900
+                  active:hover:outline-1
+                  active:hover:outline-white
+                `}
+                onClick={() => {
+                  unset();
+                }}
+              >
+                Log Out
+              </button>
+            </>
+          ) : (
             <button
               className={`
-                aspect-square w-14 cursor-pointer
-                rounded-full bg-gray-500
-                active:translate-0.5 active:scale-95
-                active:bg-gray-900 active:outline-1
-                active:outline-white
+                flex min-w-1/3 cursor-pointer items-center
+                justify-center rounded-xl bg-blue-900 p-2
+                text-4xl font-bold uppercase transition
+                select-none
+                active:hover:translate-0.5
+                active:hover:scale-95
+                active:hover:bg-gray-900
+                active:hover:outline-1
+                active:hover:outline-white
               `}
+              onClick={() =>
+                (window.location.href =
+                  "http://localhost:5115/oauth")
+              }
             >
-              {user ? (
-                <img
-                  src={user.picture}
-                  className={`
-                    aspect-square w-14 rounded-full
-                    object-fill
-                  `}
-                />
-              ) : (
-                "X"
-              )}
+              Login
             </button>
-          </div>
+          )}
         </div>
       </section>
     </nav>

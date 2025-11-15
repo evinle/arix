@@ -13,6 +13,7 @@ import MenuItem from "./components/Menu/MenuItem";
 import type { MenuItemConfig } from "./components/Menu/MenuItem.type";
 import TopBar from "./components/TopBar/TopBar";
 import { useLocalStorage } from "./hooks/useLocalStorage";
+import { useEffect } from "react";
 import { useUser } from "./hooks/useUser";
 
 const GetJWT: React.FC = () => {
@@ -23,13 +24,11 @@ const GetJWT: React.FC = () => {
   // Example: get "code" param
   const jwt = queryParams.get("code");
 
-  const { value } = useLocalStorage(
-    "jwt",
-    jwt,
-    (k, v) => v != null
-  );
+  const { value } = useLocalStorage("jwt", jwt);
 
-  navigate("/");
+  useEffect(() => {
+    if (value != null) navigate("/");
+  }, [value, navigate]);
 
   return <></>;
 };

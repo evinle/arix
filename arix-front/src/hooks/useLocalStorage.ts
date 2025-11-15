@@ -1,58 +1,144 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { create } from "zustand";
 
-function useInnerLocalStorage<T>(key: string): T;
-function useInnerLocalStorage<T>(
-  key: string,
-  value: T,
-  shouldSet: (k: typeof key, v: typeof value) => boolean
-): {
-  set: (key: string, data: T) => boolean;
-  get: (key: string) => T;
-  value: T;
+type LocalStorageState = {
+  keyValueMap: Record<string, any>;
+  setItem: <T>(key: string, value: T) => void;
+  clearItem: (key: string) => void;
 };
-function useInnerLocalStorage<T>(
-  key: string,
-  value?: T,
-  shouldSet?: (k: typeof key, v: typeof value) => boolean
-) {
-  const prevVal = useRef<T | null>(null);
 
-  const set = useCallback(
-    (key: string, data: T): boolean => {
+const essentialStorageItems = ["jwt"];
+const fetchFromStorage = (keys: string[]) => {
+  return Object.fromEntries(
+    keys.map((key) => {
       try {
-        localStorage.setItem(
-          key,
-          JSON.stringify({ value: data })
+        const parsedObj: { value: any } = JSON.parse(
+          String(localStorage.getItem(key))
         );
+        return [key, parsedObj?.value];
       } catch (e) {
         console.error(
-          `Error while setting local storage for ${key}: ${e}`
+          `Failed to get item "${key}" from local storage`,
+          e
         );
-        return false;
+        return [key, null];
       }
+    })
+  );
+};
 
-      return true;
+const useLocalStorageStore = create<LocalStorageState>(
+  (set) => ({
+    keyValueMap: fetchFromStorage(essentialStorageItems),
+    setItem: (key, value) => {
+      set((prev) => ({
+        keyValueMap: { ...prev, [key]: value }
+      }));
     },
-    []
+    clearItem: (key) =>
+      set((prev) => {
+        delete prev.keyValueMap[key];
+        return prev;
+      })
+  })
+);
+
+const UNSET_FLAG = "__UNSET_LOCAL_STORAGE_VALUE__" as const;
+
+export const useLocalStorage = <T>(
+  key: string,
+  value?: T
+) => {
+  const state = useLocalStorageStore(
+    (s) => s.keyValueMap[key] as T
+  );
+  const setItem = useLocalStorageStore((s) => s.setItem);
+  const setState = useCallback(
+    (value: T) => setItem(key, value),
+    [key, setItem]
   );
 
-  const get = useCallback((key: string): T => {
-    return JSON.parse(String(localStorage.getItem(key)))
-      ?.value satisfies T;
-  }, []);
+  const unsetState = useCallback(
+    () => setItem(key, UNSET_FLAG),
+    [key, setItem]
+  );
 
-  const inReadonlyMode = !(value && shouldSet);
+  // const [state, setState] = useState<T | null>(() => {
+  //   try {
+  //     const parsedObj: { value: T } = JSON.parse(
+  //       String(localStorage.getItem(key))
+  //     );
+  //     return parsedObj?.value;
+  //   } catch (e) {
+  //     console.error(
+  //       `Failed to get item "${key}" from local storage`,
+  //       e
+  //     );
+  //     return null;
+  //   }
+  // });
+
   useEffect(() => {
-    if (inReadonlyMode) return;
-    if (prevVal.current != null && prevVal.current == value)
+    if (value !== undefined) setState(value);
+  }, [key, value, setState]);
+
+  useEffect(() => {
+    if (state == UNSET_FLAG) {
+      localStorage.removeItem(key);
+      setState(undefined as T);
       return;
-    if (!shouldSet(key, value)) return;
-    set(key, value);
-    prevVal.current = value;
-  }, [key, value, set, shouldSet, inReadonlyMode]);
+    }
 
-  if (inReadonlyMode) return get(key);
+    localStorage.setItem(
+      key,
+      JSON.stringify({ value: state })
+    );
+  }, [key, state, setState]);
 
-  return { set, get, value: get(key) };
-}
-export const useLocalStorage = useInnerLocalStorage;
+  return {
+    value: state,
+    set: setState,
+    unset: unsetState
+  };
+  // const prevVal = useRef<T | null>(null);
+
+  // const set = useCallback(
+  //   (key: string, data: T): boolean => {
+  //     try {
+  //       localStorage.setItem(
+  //         key,
+  //         JSON.stringify({ value: data })
+  //       );
+  //     } catch (e) {
+  //       console.error(
+  //         `Error while setting local storage for ${key}: ${e}`
+  //       );
+  //       return false;
+  //     }
+
+  //     return true;
+  //   },
+  //   []
+  // );
+
+  // const get = useCallback((key: string): T => {
+  //   return JSON.parse(String(localStorage.getItem(key)))
+  //     ?.value satisfies T;
+  // }, []);
+
+  // const inReadonlyMode = !(
+  //   value !== undefined && shouldSet
+  // );
+  // useEffect(() => {
+  //   if (inReadonlyMode) return;
+  //   if (prevVal.current != null && prevVal.current == value)
+  //     return;
+  //   if (!shouldSet(key, value)) return;
+  //   set(key, value);
+  //   prevVal.current = value;
+  // }, [key, value, set, shouldSet, inReadonlyMode]);
+
+  // if (inReadonlyMode) return get(key);
+
+  // return { set, get, value: get(key) };
+};
