@@ -12,6 +12,7 @@ import Menu from "./components/Menu/Menu";
 import MenuItem from "./components/Menu/MenuItem";
 import type { MenuItemConfig } from "./components/Menu/MenuItem.type";
 import { useEffect } from "react";
+import TopBar from "./components/TopBar/TopBar";
 
 const GetJWT: React.FC = () => {
   const navigate = useNavigate();
@@ -158,6 +159,7 @@ function App() {
 
   return (
     <Background className="font-poppins">
+      <TopBar />
       {routes}
     </Background>
   );
