@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.VisualBasic;
 using MongoDB.Bson;
 
 public class TokenProvider : ControllerBase
@@ -48,11 +49,19 @@ public class TokenProvider : ControllerBase
             return BadRequest("Login failed");
 
         // Get claims from the external login
-        var user = result.Principal!.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
+        var email = result.Principal!.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
         var name = result.Principal!.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
 
+        //add to database, check if exist in database   
+        var emailCheck = await _db.GetPlayerFromEmail(email);
+        if (emailCheck == null)
+        {
+            LoginModel loginModel = new LoginModel{ Username=name,Email=email };
+            await RegisterOauth(loginModel,LoginType.Google);
+        }
+
         // Generate JWT
-        var token = GenerateJwtToken(user);
+        var token = GenerateJwtToken(email);
 
         // Optionally, clear the temp cookie
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -69,26 +78,57 @@ public class TokenProvider : ControllerBase
         var email = User.FindFirstValue(JwtRegisteredClaimNames.Email);
         return Ok(new { userId, email });
     }
-
-    public async Task<IActionResult> Login(LoginModel login)
+    [HttpGet("yuh")]
+    public async Task<IActionResult> yuh(LoginModel login)
     {
-        var player = await _db.GetPlayerFromUsername(login.Username);
+        return Ok(await _db.GetPlayerFromEmail(login.Email));
+    }
+    public async Task<IActionResult> Login(LoginModel login,LoginType tag)
+    {
 
-        if (player != null && Argon2.Verify(player.Password, login.Password))
+        Player? player = null;
+        if (tag==LoginType.Google)
         {
-            var token = GenerateJwtToken(login.Username);
-            return Ok(new { token });
+            player = await _db.GetPlayerFromEmail(login.Email);
         }
+        else
+        {
+            player = await _db.GetPlayerFromUsername(login.Username);
+        }
+
+        if (player != null)
+        {
+        
+            if (tag==LoginType.Google)
+            {
+                var token = GenerateJwtToken(login.Username);
+                return Ok(new { token });
+            }
+            else if (Argon2.Verify(player.Password, login.Password))
+            {
+                var token = GenerateJwtToken(login.Username);
+                return Ok(new { token });
+            }
+        }
+
 
         return Unauthorized();
     }
 
-    public async Task<IActionResult> Register(LoginModel login)
+    public async Task<IActionResult> Register(LoginModel login, LoginType loginType)
     {
-        Player player = new Player(login.Username, login.Email, Argon2.Hash(login.Password));
+        Player player = new Player(login.Username, login.Email, Argon2.Hash(login.Password), loginType);
         await _db.CreatePlayer(player);
         return Ok();
     }
+    private async Task<IActionResult> RegisterOauth(LoginModel login, LoginType loginType)
+    {
+        Player player = new Player(login.Username, login.Email, loginType);
+        await _db.CreatePlayer(player);
+        return Ok();
+    }
+    
+
 
     public async Task<IActionResult> ChangePassword(LoginModel login)
     {
