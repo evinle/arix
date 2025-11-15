@@ -1,8 +1,8 @@
 using System.Text;
 using ArixBack.Models;
 using ArixBack.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -138,6 +138,10 @@ builder
     {
         googleOptions.ClientId = builder.Configuration["Authentication:Google:Client_id"];
         googleOptions.ClientSecret = builder.Configuration["Authentication:Google:Client_secret"];
+
+        googleOptions.Scope.Add("profile");
+        googleOptions.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+        googleOptions.ClaimActions.MapJsonKey("urn:google:locale", "locale", "string");
         googleOptions.CallbackPath = "/signin-google";
         googleOptions.SaveTokens = true;
     });

@@ -11,6 +11,8 @@ export const useUser = (): {
 
   const { data, isLoading, isError } = useQuery<{
     email: string;
+    userName: string;
+    picture: string;
   }>({
     queryKey: ["me", jwtInLocalStorage],
     queryFn: async () =>
@@ -28,7 +30,9 @@ export const useUser = (): {
     isError,
     user: {
       id: data ? "lol_ID" : "",
-      email: data?.email ?? ""
+      email: data?.email ?? "",
+      name: data?.userName ?? "",
+      picture: data?.picture ?? ""
     }
   };
 };

@@ -50,9 +50,15 @@ public class TokenProvider : ControllerBase
         // Get claims from the external login
         var user = result.Principal!.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
         var name = result.Principal!.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
+        var picture = result.Principal!.Claims.FirstOrDefault(x => x.Type == "urn:google:picture")?.Value; ;
 
         // Generate JWT
-        var token = GenerateJwtToken(user);
+        var token = GenerateJwtToken(new Dictionary<string, string>
+        {
+            [JwtRegisteredClaimNames.Email] = user,
+            [JwtRegisteredClaimNames.Name] = name,
+            [JwtRegisteredClaimNames.Picture] = picture
+        });
 
         // Optionally, clear the temp cookie
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -65,9 +71,10 @@ public class TokenProvider : ControllerBase
     [HttpGet("me")]
     public IActionResult GetMe()
     {
-        var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var userName = User.FindFirstValue(JwtRegisteredClaimNames.Name);
         var email = User.FindFirstValue(JwtRegisteredClaimNames.Email);
-        return Ok(new { userId, email });
+        var picture = User.FindFirstValue(JwtRegisteredClaimNames.Picture);
+        return Ok(new { userName, email, picture });
     }
 
     public async Task<IActionResult> Login(LoginModel login)
@@ -76,7 +83,10 @@ public class TokenProvider : ControllerBase
 
         if (player != null && Argon2.Verify(player.Password, login.Password))
         {
-            var token = GenerateJwtToken(login.Username);
+            var token = GenerateJwtToken(new Dictionary<string, string>
+            {
+                [JwtRegisteredClaimNames.NameId] = login.Username
+            });
             return Ok(new { token });
         }
 
@@ -103,16 +113,16 @@ public class TokenProvider : ControllerBase
         return Forbid();
     }
 
-    private string GenerateJwtToken(string email)
+    private string GenerateJwtToken(Dictionary<string, string> claimsToGenerate)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        var claimsArray = claimsToGenerate.ToArray().Select(x => new Claim(x.Key, x.Value));
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        };
+        }.Concat(claimsArray);
 
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],

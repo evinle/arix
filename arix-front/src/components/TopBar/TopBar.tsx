@@ -35,7 +35,14 @@ const TopBar: React.FC<TopBarProps> = () => {
               active:outline-white
             `}
           >
-            {user ? user.email : "X"}
+            {user ? (
+              <img
+                src={user.picture}
+                className={`aspect-square w-14 rounded`}
+              />
+            ) : (
+              "X"
+            )}
           </button>
         </div>
       </section>
