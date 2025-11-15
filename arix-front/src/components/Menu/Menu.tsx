@@ -10,9 +10,9 @@ const Menu: React.FC<MenuProps> = ({ items }) => {
   return (
     <div
       className={`
-        flex h-1/4 min-h-36 min-w-1/2 flex-col items-center
-        justify-between rounded-xl border-2 border-blue-200
-        p-3
+        flex h-1/4 min-h-fit min-w-1/2 flex-col items-center
+        justify-between gap-2 rounded-xl border-2
+        border-blue-200 p-3
       `}
     >
       {items.map((itemConfig) => (
