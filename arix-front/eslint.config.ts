@@ -68,7 +68,7 @@ export default defineConfig([
     extends: ["js/recommended"],
     languageOptions: { globals: globals.browser },
     rules: {
-      "no-unused-vars": "warn"
+      "no-unused-vars": "off"
     }
   },
   // tseslint.configs.recommended,
