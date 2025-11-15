@@ -2,6 +2,7 @@ using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using ArixBack.Models;
 using ArixBack.Services;
 using Isopoh.Cryptography.Argon2;
@@ -74,12 +75,13 @@ public class TokenProvider : ControllerBase
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet("me")]
-    public IActionResult GetMe()
+    public async Task<IActionResult> GetMe()
     {
         var userName = User.FindFirstValue(JwtRegisteredClaimNames.Name);
         var email = User.FindFirstValue(JwtRegisteredClaimNames.Email);
         var picture = User.FindFirstValue(JwtRegisteredClaimNames.Picture);
-        return Ok(new { userName, email, picture });
+        var id = (await _db.GetPlayerFromEmail(email))?.Id;
+        return Ok(new { userName, email, picture, id });
     }
     [HttpGet("yuh")]
     public async Task<IActionResult> yuh(LoginModel login)

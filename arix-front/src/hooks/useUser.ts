@@ -10,6 +10,7 @@ export const useUser = (): {
   const jwtInLocalStorage = useLocalStorage("jwt");
 
   const { data, isLoading, isError } = useQuery<{
+    id: string;
     email: string;
     userName: string;
     picture: string;
@@ -29,7 +30,7 @@ export const useUser = (): {
     isLoading,
     isError,
     user: {
-      id: data ? "lol_ID" : "",
+      id: data?.id ?? "",
       email: data?.email ?? "",
       name: data?.userName ?? "",
       picture: data?.picture ?? ""
