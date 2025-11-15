@@ -30,14 +30,27 @@ namespace ArixBack.Models
       public string Email { get; set; }
       
       [BsonElement("password")]
-      [JsonPropertyName("password")]
-      public string Password { get; set; }
-      public Player(string username, string email, string password)
+      [JsonIgnore]
+      public string? Password { get; set; }
+     
+      [BsonElement("tag")]
+      [JsonPropertyName("tag")]
+      public LoginType LoginType { get; set; }
+      public Player(string username, string email, string password,LoginType loginType)
       {
         Username = username;
         Gold = 0;
         Email = email;
         Password = password;
+        LoginType = loginType;
+      }
+  
+      public Player(string username, string email,LoginType loginType)
+      {
+        Username = username;
+        Gold = 0;
+        Email = email;
+        LoginType = loginType;
       }
     }
 }

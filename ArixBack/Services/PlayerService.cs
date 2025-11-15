@@ -30,19 +30,38 @@ namespace ArixBack.Services
             {
                 [nameof(Player.Username)] = username,
             });
+        public async Task<Player?> GetPlayerFromEmail(string email) =>
+            await GetFirstPlayerByFields(new Dictionary<string, object>
+            {
+                [nameof(Player.Email)] = email,
+            });
 
         
         public FilterDefinition<Player> GetPlayerFilterByFields(Dictionary<string, object> fieldsAndSearchValues)
         {
             
+            // var filter = Builders<Player>.Filter.Empty;
+            // foreach (var searchKeyValue in fieldsAndSearchValues)
+            // {
+            //     filter = filter
+            //         & Builders<Player>.Filter
+            //                     // x[searchKeyValue.Key]
+            //         .Where(x => x.GetType().GetProperty(searchKeyValue.Key).GetValue(x) == searchKeyValue.Value);
+            // }
+            // return filter;
+
             var filter = Builders<Player>.Filter.Empty;
+
             foreach (var searchKeyValue in fieldsAndSearchValues)
             {
-                filter = filter
-                    & Builders<Player>.Filter
-                                // x[searchKeyValue.Key]
-                    .Where(x => x.GetType().GetProperty(searchKeyValue.Key).GetValue(x) == searchKeyValue.Value);
+                // Dynamically build filter for each field
+                var fieldName = searchKeyValue.Key;
+                var fieldValue = searchKeyValue.Value;
+
+                // Create a filter for each field and value
+                filter &= Builders<Player>.Filter.Eq(fieldName, fieldValue);
             }
+
             return filter;
         }
         public async Task<List<Player>> GetPlayerByFields(Dictionary<string, object> fieldsAndSearchValues)

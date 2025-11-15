@@ -23,7 +23,7 @@ namespace ArixBack.Controllers
         {
             if (ValidUserName(login.Username) && ValidPassword(login.Password) && ValidEmail(login.Email))
             {
-                await _db.Register(login);
+                await _db.Register(login,LoginType.Normal);
                 return Ok();
             }
             return BadRequest("Login Unsuccessful");
@@ -32,8 +32,7 @@ namespace ArixBack.Controllers
         [HttpPost("Login")]
         public async Task<IActionResult> Login(LoginModel login)
         {
-
-            return await _db.Login(login);
+            return await _db.Login(login,LoginType.Normal);
         }
 
         [HttpPost("ForgotPassword")]
