@@ -12,12 +12,24 @@ const TopBar: React.FC<TopBarProps> = () => {
     <div
       className={`
         aspect-square w-14 cursor-pointer rounded-full
+        bg-gray-500 outline-2 outline-pink-300
+        active:translate-0.5 active:scale-95
+        active:bg-gray-900 active:outline-1
+        active:outline-white
       `}
     >
-      <button
+      {user.picture && (
+        <img
+          src={user.picture}
+          className={`
+            aspect-square w-14 rounded-full object-fill
+          `}
+        />
+      )}
+      {/* <button
         className={`
           aspect-square w-14 cursor-pointer rounded-full
-          bg-gray-500
+          bg-gray-500 outline-2 outline-red-900
           active:translate-0.5 active:scale-95
           active:bg-gray-900 active:outline-1
           active:outline-white
@@ -31,7 +43,7 @@ const TopBar: React.FC<TopBarProps> = () => {
             `}
           />
         )}
-      </button>
+      </button> */}
     </div>
   );
   return (
@@ -80,10 +92,9 @@ const TopBar: React.FC<TopBarProps> = () => {
           ) : (
             <button
               className={`
-                flex min-w-1/3 cursor-pointer items-center
+                ml-2 flex cursor-pointer items-center
                 justify-center rounded-xl bg-blue-900 p-2
-                text-4xl font-bold uppercase transition
-                select-none
+                font-bold uppercase transition select-none
                 active:hover:translate-0.5
                 active:hover:scale-95
                 active:hover:bg-gray-900
