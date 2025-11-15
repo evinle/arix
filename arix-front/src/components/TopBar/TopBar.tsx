@@ -26,24 +26,33 @@ const TopBar: React.FC<TopBarProps> = () => {
         <div
           className={`flex w-full items-center justify-end`}
         >
-          <button
+          <div
             className={`
               aspect-square w-14 cursor-pointer rounded-full
-              bg-gray-500
-              active:translate-0.5 active:scale-95
-              active:bg-gray-900 active:outline-1
-              active:outline-white
             `}
           >
-            {user ? (
-              <img
-                src={user.picture}
-                className={`aspect-square w-14 rounded`}
-              />
-            ) : (
-              "X"
-            )}
-          </button>
+            <button
+              className={`
+                aspect-square w-14 cursor-pointer
+                rounded-full bg-gray-500
+                active:translate-0.5 active:scale-95
+                active:bg-gray-900 active:outline-1
+                active:outline-white
+              `}
+            >
+              {user ? (
+                <img
+                  src={user.picture}
+                  className={`
+                    aspect-square w-14 rounded-full
+                    object-fill
+                  `}
+                />
+              ) : (
+                "X"
+              )}
+            </button>
+          </div>
         </div>
       </section>
     </nav>
