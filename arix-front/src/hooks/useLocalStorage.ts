@@ -1,10 +1,20 @@
 import { useCallback, useEffect, useRef } from "react";
 
-export const useLocalStorage = <T>(
+function useInnerLocalStorage<T>(key: string): T;
+function useInnerLocalStorage<T>(
   key: string,
   value: T,
   shouldSet: (k: typeof key, v: typeof value) => boolean
-) => {
+): {
+  set: (key: string, data: T) => boolean;
+  get: (key: string) => T;
+  value: T;
+};
+function useInnerLocalStorage<T>(
+  key: string,
+  value?: T,
+  shouldSet?: (k: typeof key, v: typeof value) => boolean
+) {
   const prevVal = useRef<T | null>(null);
 
   const set = useCallback(
@@ -31,13 +41,18 @@ export const useLocalStorage = <T>(
       ?.value satisfies T;
   }, []);
 
+  const inReadonlyMode = !(value && shouldSet);
   useEffect(() => {
+    if (inReadonlyMode) return;
     if (prevVal.current != null && prevVal.current == value)
       return;
     if (!shouldSet(key, value)) return;
     set(key, value);
     prevVal.current = value;
-  }, [key, value, set, shouldSet]);
+  }, [key, value, set, shouldSet, inReadonlyMode]);
+
+  if (inReadonlyMode) return get(key);
 
   return { set, get, value: get(key) };
-};
+}
+export const useLocalStorage = useInnerLocalStorage;
