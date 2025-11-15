@@ -11,8 +11,9 @@ import CenterOnContainer from "./components/Containers/CenterOnContainer";
 import Menu from "./components/Menu/Menu";
 import MenuItem from "./components/Menu/MenuItem";
 import type { MenuItemConfig } from "./components/Menu/MenuItem.type";
-import { useEffect } from "react";
 import TopBar from "./components/TopBar/TopBar";
+import { useLocalStorage } from "./hooks/useLocalStorage";
+import { useUser } from "./hooks/useUser";
 
 const GetJWT: React.FC = () => {
   const navigate = useNavigate();
@@ -22,10 +23,14 @@ const GetJWT: React.FC = () => {
   // Example: get "code" param
   const jwt = queryParams.get("code");
 
-  console.log("jwt", jwt);
+  const { value } = useLocalStorage(
+    "jwt",
+    jwt,
+    (k, v) => v != null
+  );
 
-  if (jwt) localStorage.setItem("jwt", jwt);
   navigate("/");
+
   return <></>;
 };
 
@@ -82,17 +87,6 @@ function App() {
     enabled: false
   });
 
-  const { search } = useLocation();
-  const queryParams = new URLSearchParams(search);
-
-  // Example: get "code" param
-  const jwt = queryParams.get("code");
-
-  useEffect(() => {
-    console.log("jwt", jwt, localStorage.getItem("jwt"));
-  }, [jwt]);
-
-  if (jwt) localStorage.setItem("jwt", jwt);
   function renderDebugWeapons() {
     if (isPending && isFetching)
       return <div>Loading...</div>;
@@ -107,18 +101,7 @@ function App() {
     );
   }
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["me"],
-    queryFn: async () =>
-      (
-        await fetch("http://localhost:5115/me", {
-          headers: {
-            Authorization:
-              "Bearer " + localStorage.getItem("jwt")
-          }
-        })
-      ).json()
-  });
+  const { isLoading, user } = useUser();
 
   const routes = (
     <Routes>
@@ -128,7 +111,7 @@ function App() {
           <CenterOnContainer className={`flex-col`}>
             {isLoading
               ? "Loading user info"
-              : JSON.stringify(data)}
+              : JSON.stringify(user)}
             {renderDebugWeapons()}
             <Menu items={MenuItems}></Menu>
           </CenterOnContainer>

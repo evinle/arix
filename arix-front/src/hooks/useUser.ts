@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocalStorage } from "./useLocalStorage";
-import type { UserState } from "../stores/userStore";
+import type { UserProperties } from "../stores/userStore";
 
 export const useUser = (): {
   isLoading: boolean;
   isError: boolean;
-  user: Pick<UserState, "email" | "id">;
+  user: UserProperties;
 } => {
   const jwtInLocalStorage = useLocalStorage("jwt");
 
@@ -22,6 +22,7 @@ export const useUser = (): {
         })
       ).json()
   });
+
   return {
     isLoading,
     isError,
