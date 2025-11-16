@@ -39,7 +39,6 @@ export const useUser = (): {
     },
     enabled: jwtInLocalStorage != null
   });
-  console.log(jwtInLocalStorage);
 
   return {
     isLoading,
