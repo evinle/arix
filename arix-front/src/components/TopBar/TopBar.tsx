@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { useUser } from "../../hooks/useUser";
 
@@ -10,6 +10,7 @@ const TopBar: React.FC<TopBarProps> = () => {
   const isLoggedIn = user != null && jwtToken != null;
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const UserAvatar = (
     <div
@@ -40,7 +41,10 @@ const TopBar: React.FC<TopBarProps> = () => {
     >
       {/* left */}
       <section className="w-1/3">
-        <h1 className="flex gap-2 text-4xl">
+        <h1
+          className="flex cursor-pointer gap-2 text-4xl"
+          onClick={() => navigate("/")}
+        >
           a r i <span className="font-bold">X</span>
         </h1>
       </section>
@@ -50,12 +54,35 @@ const TopBar: React.FC<TopBarProps> = () => {
 
       {/* right */}
       <section className="w-1/3">
-        <div
-          className={`flex w-full items-center justify-end`}
-        >
-          {isLoggedIn ? (
-            <>
-              {UserAvatar}
+        {location.pathname != "/login" && (
+          <div
+            className={`
+              flex w-full items-center justify-end
+            `}
+          >
+            {isLoggedIn ? (
+              <>
+                {UserAvatar}
+                <button
+                  className={`
+                    ml-2 flex cursor-pointer items-center
+                    justify-center rounded-xl bg-blue-900
+                    p-2 font-bold uppercase transition
+                    select-none
+                    active:hover:translate-0.5
+                    active:hover:scale-95
+                    active:hover:bg-gray-900
+                    active:hover:outline-1
+                    active:hover:outline-white
+                  `}
+                  onClick={() => {
+                    unset();
+                  }}
+                >
+                  Log Out
+                </button>
+              </>
+            ) : (
               <button
                 className={`
                   ml-2 flex cursor-pointer items-center
@@ -67,35 +94,13 @@ const TopBar: React.FC<TopBarProps> = () => {
                   active:hover:outline-1
                   active:hover:outline-white
                 `}
-                onClick={() => {
-                  unset();
-                }}
+                onClick={() => navigate("/login")}
               >
-                Log Out
+                Login
               </button>
-            </>
-          ) : (
-            <button
-              className={`
-                ml-2 flex cursor-pointer items-center
-                justify-center rounded-xl bg-blue-900 p-2
-                font-bold uppercase transition select-none
-                active:hover:translate-0.5
-                active:hover:scale-95
-                active:hover:bg-gray-900
-                active:hover:outline-1
-                active:hover:outline-white
-              `}
-              // onClick={() =>
-              //   (window.location.href =
-              //     "http://localhost:5115/oauth")
-              // }
-              onClick={() => navigate("/login")}
-            >
-              Login
-            </button>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </section>
     </nav>
   );

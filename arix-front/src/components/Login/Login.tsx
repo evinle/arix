@@ -3,9 +3,10 @@ import CenterOnContainer from "../Containers/CenterOnContainer";
 import AxInput from "../Form/AxInput";
 import Menu from "../Menu/Menu";
 import { useQuery } from "@tanstack/react-query";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 type LoginProps = {};
 type LoginFormInput = {
@@ -87,7 +88,7 @@ const Login: React.FC<LoginProps> = () => {
         {formTopLevelErrors && (
           <sub
             className={`
-              absolute top-3 h-fit max-h-max text-sm
+              absolute -top-10 h-fit max-h-max text-sm
               text-red-700
             `}
           >
@@ -141,6 +142,41 @@ const Login: React.FC<LoginProps> = () => {
               Login
             </span>
           </button>
+          <div
+            className={`
+              flex w-1/2 flex-col items-center
+              justify-center gap-2
+            `}
+          >
+            <div className="flex gap-2 text-sm">
+              Don't have an account?
+              <Link to={"/signup"} className="underline">
+                Sign up
+              </Link>
+            </div>
+            <div className="grid w-full grid-cols-3 gap-2">
+              <button></button>
+
+              <button
+                className={`
+                  flex-1 cursor-pointer rounded-md
+                  bg-pink-300 px-3 py-1 text-blue-950
+                  active:bg-pink-200
+                  active:hover:translate-0.5
+                  active:hover:scale-95
+                `}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href =
+                    "http://localhost:5115/oauth";
+                }}
+              >
+                <FontAwesomeIcon icon={faGoogle} />
+              </button>
+
+              <button></button>
+            </div>
+          </div>
         </form>
       </Menu>
     </CenterOnContainer>

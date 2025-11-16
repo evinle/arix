@@ -54,14 +54,6 @@ function App() {
       onClick: () => refetch()
     },
     {
-      id: "login",
-      label: "Test Login",
-      onClick: () => {
-        window.location.href =
-          "http://localhost:5115/oauth";
-      }
-    },
-    {
       id: "exit",
       label: "Exit",
       onClick: () => console.log("Exiting")
