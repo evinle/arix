@@ -77,11 +77,12 @@ public class TokenProvider : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> GetMe()
     {
-        var userName = User.FindFirstValue(JwtRegisteredClaimNames.Name);
+        var userName = User.FindFirstValue(JwtRegisteredClaimNames.NameId);
         var email = User.FindFirstValue(JwtRegisteredClaimNames.Email);
         var picture = User.FindFirstValue(JwtRegisteredClaimNames.Picture);
+        var name = User.FindFirstValue(JwtRegisteredClaimNames.Name);
         var id = (await _db.GetPlayerFromEmail(email))?.Id;
-        return Ok(new { userName, email, picture, id });
+        return Ok(new { userName, email, picture, id, name });
     }
     [HttpGet("yuh")]
     public async Task<IActionResult> yuh(LoginModel login)
