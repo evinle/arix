@@ -97,6 +97,7 @@ const Signup: React.FC = () => {
               control={control}
               name={"password"}
               label="Password"
+              type="password"
               rules={{ required: "Password is required" }}
             />
             <AxInput
