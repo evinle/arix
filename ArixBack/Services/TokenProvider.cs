@@ -94,11 +94,6 @@ public class TokenProvider : ControllerBase
         Player? player = null;
         if (tag == LoginType.Google)
         {
-            var token = GenerateJwtToken(new Dictionary<string, string>
-            {
-                [JwtRegisteredClaimNames.NameId] = login.Username
-            });
-            return Ok(new { token });
             player = await _db.GetPlayerFromEmail(login.Email);
         }
         else
