@@ -7,13 +7,6 @@ import {
   type UseControllerProps
 } from "react-hook-form";
 
-const className = {
-  input:
-    "rounded-md text-lg outline-1 outline-pink-300 px-2",
-  textfieldContainer:
-    "flex justify-start items-center gap-4"
-};
-
 export const AxInput = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends
@@ -22,10 +15,12 @@ export const AxInput = <
   control,
   name,
   type,
+  label,
   rules
 }: {
   control: Control<TFieldValues, any, TFieldValues>;
   name: TName;
+  label: string;
   rules?: UseControllerProps<
     TFieldValues,
     TName,
@@ -34,19 +29,27 @@ export const AxInput = <
   type?: React.HTMLInputTypeAttribute;
 }) => {
   return (
-    <div className={className.textfieldContainer}>
+    <div className="grid grid-cols-1 items-center gap-2">
       <label>
-        Username <sup>*</sup>
+        {label} {rules?.required && <sup>*</sup>}
       </label>
+
       <Controller
         key={"username"}
         name={name}
         control={control}
         rules={rules}
         render={({ field, formState: { errors } }) => (
-          <div className="relative">
+          <div
+            className={`
+              flex flex-col items-start justify-center
+            `}
+          >
             <input
-              className={className.input}
+              className={`
+                w-full rounded-md px-2 text-lg outline-1
+                outline-pink-300
+              `}
               type={type}
               {...field}
               aria-invalid={errors[name] ? "true" : "false"}
@@ -54,9 +57,9 @@ export const AxInput = <
             {errors[name] && (
               <sub
                 className={`
-                  absolute top-[150%] left-0 w-max
-                  max-w-full break-after-all leading-4
-                  text-wrap wrap-normal text-red-700
+                  z-10 w-max max-w-full break-after-all
+                  leading-4 text-wrap wrap-normal
+                  text-red-700
                 `}
               >
                 <>{errors[name].message}</>

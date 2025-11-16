@@ -45,7 +45,6 @@ const Login: React.FC<LoginProps> = () => {
   const {
     handleSubmit,
     control,
-    watch,
     clearErrors,
     formState: {
       errors: { root: formTopLevelErrors }
@@ -99,27 +98,34 @@ const Login: React.FC<LoginProps> = () => {
           className="contents"
           onSubmit={handleSubmit(() => login())}
         >
-          <AxInput
-            key={"username"}
-            control={control}
-            name="username"
-            rules={{
-              required: "Username is required",
-              minLength: {
-                message:
-                  "Username has to be more than 3 characters",
-                value: 3
-              }
-            }}
-          />
-          <AxInput
-            key={"password"}
-            control={control}
-            name="password"
-            type={"password"}
-            rules={{ required: "Password is required" }}
-          />
-
+          <div
+            className={`
+              grid w-1/3 grid-cols-1 items-center gap-4
+            `}
+          >
+            <AxInput
+              key={"username"}
+              label="Name"
+              control={control}
+              name="username"
+              rules={{
+                required: "Username is required",
+                minLength: {
+                  message:
+                    "Username has to be more than 3 characters",
+                  value: 3
+                }
+              }}
+            />
+            <AxInput
+              key={"password"}
+              label="Password"
+              control={control}
+              name="password"
+              type={"password"}
+              rules={{ required: "Password is required" }}
+            />
+          </div>
           <button
             type="submit"
             className={`
