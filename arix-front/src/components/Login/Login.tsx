@@ -5,10 +5,13 @@ import Menu from "../Menu/Menu";
 import { useQuery } from "@tanstack/react-query";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
-type LoginProps = {};
+type LoginProps = {
+  defaultFormValues: Partial<LoginFormInput>;
+};
 type LoginFormInput = {
   username: string;
   password: string;
@@ -41,7 +44,9 @@ const useLoginQuery = ({
     },
     enabled: false
   });
-const Login: React.FC<LoginProps> = () => {
+const Login: React.FC<LoginProps> = ({
+  defaultFormValues
+}) => {
   const {
     handleSubmit,
     control,
@@ -49,7 +54,9 @@ const Login: React.FC<LoginProps> = () => {
     formState: {
       errors: { root: formTopLevelErrors }
     }
-  } = useForm<LoginFormInput>();
+  } = useForm<LoginFormInput>({
+    defaultValues: defaultFormValues
+  });
   const navigate = useNavigate();
   const [username, password] = useWatch({
     control,
@@ -61,14 +68,25 @@ const Login: React.FC<LoginProps> = () => {
       username: username,
       password: password
     });
+
   useEffect(() => {
     clearErrors();
   }, [username, password, clearErrors]);
 
+  const [loginJWT, setLoginJWT] = useState<string | null>();
+  const _ = useLocalStorage("jwt", loginJWT);
+
   useEffect(() => {
     if (!loginState) return;
 
-    if (loginState.ok) navigate("/");
+    if (loginState.ok) {
+      loginState
+        .json()
+        .then(({ token }: { token: string }) =>
+          setLoginJWT(token)
+        )
+        .then(() => navigate("/"));
+    }
 
     if (loginState.status == 401)
       control.setError("root", {

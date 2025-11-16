@@ -16,6 +16,7 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useEffect } from "react";
 import { useUser } from "./hooks/useUser";
 import Login from "./components/Login/Login";
+import Signup from "./components/Login/Signup";
 
 const GetJWT: React.FC = () => {
   const navigate = useNavigate();
@@ -130,6 +131,7 @@ function App() {
         element={<GetJWT />}
       ></Route>
       <Route path="/login" element={<Login />}></Route>
+      <Route path="/signup" element={<Signup />}></Route>
     </Routes>
   );
 
