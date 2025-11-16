@@ -4,7 +4,7 @@ import CenterOnContainer from "../Containers/CenterOnContainer";
 import Menu from "../Menu/Menu";
 import AxInput from "../Form/AxInput";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 type SignupFormInput = {
   username: string;
@@ -106,6 +106,12 @@ const Signup: React.FC = () => {
               type="email"
               rules={{ required: "Email is required" }}
             />
+          </div>
+          <div className="flex gap-2 text-sm">
+            Already have an account?
+            <Link to={"/login"} className="underline">
+              Login
+            </Link>
           </div>
           <button
             type="submit"
