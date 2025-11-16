@@ -15,6 +15,7 @@ import TopBar from "./components/TopBar/TopBar";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useEffect } from "react";
 import { useUser } from "./hooks/useUser";
+import Login from "./components/Login/Login";
 
 const GetJWT: React.FC = () => {
   const navigate = useNavigate();
@@ -136,6 +137,7 @@ function App() {
         path="/jwtCallback"
         element={<GetJWT />}
       ></Route>
+      <Route path="/login" element={<Login />}></Route>
     </Routes>
   );
 

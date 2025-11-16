@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { useUser } from "../../hooks/useUser";
 
@@ -7,6 +8,8 @@ const TopBar: React.FC<TopBarProps> = () => {
   const { value: jwtToken, unset } =
     useLocalStorage<string>("jwt");
   const isLoggedIn = user != null && jwtToken != null;
+
+  const navigate = useNavigate();
 
   const UserAvatar = (
     <div
@@ -26,24 +29,6 @@ const TopBar: React.FC<TopBarProps> = () => {
           `}
         />
       )}
-      {/* <button
-        className={`
-          aspect-square w-14 cursor-pointer rounded-full
-          bg-gray-500 outline-2 outline-red-900
-          active:translate-0.5 active:scale-95
-          active:bg-gray-900 active:outline-1
-          active:outline-white
-        `}
-      >
-        {user.picture && (
-          <img
-            src={user.picture}
-            className={`
-              aspect-square w-14 rounded-full object-fill
-            `}
-          />
-        )}
-      </button> */}
     </div>
   );
   return (
@@ -101,10 +86,11 @@ const TopBar: React.FC<TopBarProps> = () => {
                 active:hover:outline-1
                 active:hover:outline-white
               `}
-              onClick={() =>
-                (window.location.href =
-                  "http://localhost:5115/oauth")
-              }
+              // onClick={() =>
+              //   (window.location.href =
+              //     "http://localhost:5115/oauth")
+              // }
+              onClick={() => navigate("/login")}
             >
               Login
             </button>
