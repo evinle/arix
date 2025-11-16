@@ -107,12 +107,7 @@ const Signup: React.FC = () => {
               rules={{ required: "Email is required" }}
             />
           </div>
-          <div className="flex gap-2 text-sm">
-            Already have an account?
-            <Link to={"/login"} className="underline">
-              Login
-            </Link>
-          </div>
+
           <button
             type="submit"
             className={`
@@ -135,6 +130,12 @@ const Signup: React.FC = () => {
               Sign Up
             </span>
           </button>
+          <div className="flex gap-2 text-sm">
+            Already have an account?
+            <Link to={"/login"} className="underline">
+              Login
+            </Link>
+          </div>
         </form>
       </Menu>
     </CenterOnContainer>
