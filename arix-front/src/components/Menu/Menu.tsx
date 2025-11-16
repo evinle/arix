@@ -14,8 +14,8 @@ const Menu: React.FC<MenuProps> = (props) => {
     <div
       className={`
         flex h-1/4 min-h-fit min-w-1/2 flex-col items-center
-        justify-between gap-2 rounded-xl border-2
-        border-blue-200 p-3
+        justify-between gap-2 rounded-xl p-3 outline-2
+        outline-blue-200
         ${props.className ?? ""}
       `}
     >
