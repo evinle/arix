@@ -7,7 +7,7 @@ export const useUser = (): {
   isError: boolean;
   user: UserProperties;
 } => {
-  const { value: jwtInLocalStorage } =
+  const { value: jwtInLocalStorage, unset } =
     useLocalStorage<string>("jwt");
 
   const { data, isLoading, isError } = useQuery<{
@@ -26,11 +26,20 @@ export const useUser = (): {
           }
         }
       );
+
+      if (
+        jwtInLocalStorage != null &&
+        meQueryResult.status == 401
+      ) {
+        // expired token
+        unset();
+      }
+
       return meQueryResult.json();
     },
     enabled: jwtInLocalStorage != null
   });
-  // console.log(isError, error);
+  console.log(jwtInLocalStorage);
 
   return {
     isLoading,
