@@ -19,7 +19,7 @@ export const useUser = (): {
     queryKey: ["me", jwtInLocalStorage],
     queryFn: async () => {
       const meQueryResult = await fetch(
-        "http://localhost:5115/me",
+        "http://localhost:5115/LoginController/me",
         {
           headers: {
             Authorization: "Bearer " + jwtInLocalStorage

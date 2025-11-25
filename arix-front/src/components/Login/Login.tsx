@@ -192,7 +192,7 @@ const Login: React.FC<LoginProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   window.location.href =
-                    "http://localhost:5115/oauth";
+                    "http://localhost:5115/LoginController/oauth";
                 }}
               >
                 <FontAwesomeIcon icon={faGoogle} />
