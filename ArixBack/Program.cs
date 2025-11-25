@@ -161,6 +161,8 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseWebSockets();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
