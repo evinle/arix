@@ -17,6 +17,7 @@ import { useEffect } from "react";
 import { useUser } from "./hooks/useUser";
 import Login from "./components/Login/Login";
 import Signup from "./components/Login/Signup";
+import { queryFnBuilder } from "./helpers/queryBuilder";
 
 const GetJWT: React.FC = () => {
   const navigate = useNavigate();
@@ -68,13 +69,9 @@ function App() {
     isError
   } = useQuery({
     queryKey: [],
-    queryFn: async () => {
-      const res = await fetch(
-        "http://localhost:5115/Weapons/GetAllWeapons"
-      );
-      if (res.ok) return (await res.json()) as Weapon[];
-      throw new Error("failed to fetch");
-    },
+    queryFn: queryFnBuilder<Weapon[]>(
+      "/Weapons/GetAllWeapons"
+    ),
     staleTime: () => 1,
     gcTime: 0,
     enabled: false
