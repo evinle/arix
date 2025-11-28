@@ -78,8 +78,6 @@ namespace ArixBack.Controllers
                     return Ok(new { token });
                 }
             }
-
-
             return Unauthorized();
         }
 
@@ -122,6 +120,7 @@ namespace ArixBack.Controllers
             {
                 [JwtRegisteredClaimNames.Email] = email,
                 [JwtRegisteredClaimNames.Name] = name,
+                [JwtRegisteredClaimNames.NameId] = name,
                 [JwtRegisteredClaimNames.Picture] = picture
             });
 
