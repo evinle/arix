@@ -23,7 +23,7 @@ namespace ArixBack.Controllers
             _logger = logger;
         }
 
-        [HttpGet("/ws")]
+        [HttpGet("ws")]
         public async Task Get()
         {
             if (HttpContext.WebSockets.IsWebSocketRequest)
