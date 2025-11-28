@@ -9,7 +9,6 @@ import type { Weapon } from "./apiTypes/weapons.type";
 import Background from "./components/Containers/Background";
 import CenterOnContainer from "./components/Containers/CenterOnContainer";
 import Menu from "./components/Menu/Menu";
-import MenuItem from "./components/Menu/MenuItem";
 import type { MenuItemConfig } from "./components/Menu/MenuItem.type";
 import TopBar from "./components/TopBar/TopBar";
 import { useLocalStorage } from "./hooks/useLocalStorage";
@@ -18,6 +17,7 @@ import { useUser } from "./hooks/useUser";
 import Login from "./components/Login/Login";
 import Signup from "./components/Login/Signup";
 import { queryFnBuilder } from "./helpers/queryBuilder";
+import Matchmaking from "./components/Game/Matchmaking";
 
 const GetJWT: React.FC = () => {
   const navigate = useNavigate();
@@ -113,13 +113,7 @@ function App() {
         element={
           <CenterOnContainer className={`flex-col`}>
             Game Page
-            <MenuItem
-              config={{
-                id: "back",
-                label: "Back",
-                onClick: () => navigate("/")
-              }}
-            ></MenuItem>
+            <Matchmaking />
           </CenterOnContainer>
         }
       ></Route>
