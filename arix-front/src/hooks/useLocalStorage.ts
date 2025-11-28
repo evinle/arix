@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { create } from "zustand";
 
 type LocalStorageState = {
@@ -63,21 +63,6 @@ export const useLocalStorage = <T>(
     [key, setItem]
   );
 
-  // const [state, setState] = useState<T | null>(() => {
-  //   try {
-  //     const parsedObj: { value: T } = JSON.parse(
-  //       String(localStorage.getItem(key))
-  //     );
-  //     return parsedObj?.value;
-  //   } catch (e) {
-  //     console.error(
-  //       `Failed to get item "${key}" from local storage`,
-  //       e
-  //     );
-  //     return null;
-  //   }
-  // });
-
   useEffect(() => {
     if (value !== undefined) setState(value);
   }, [key, value, setState]);
@@ -100,45 +85,4 @@ export const useLocalStorage = <T>(
     set: setState,
     unset: unsetState
   };
-  // const prevVal = useRef<T | null>(null);
-
-  // const set = useCallback(
-  //   (key: string, data: T): boolean => {
-  //     try {
-  //       localStorage.setItem(
-  //         key,
-  //         JSON.stringify({ value: data })
-  //       );
-  //     } catch (e) {
-  //       console.error(
-  //         `Error while setting local storage for ${key}: ${e}`
-  //       );
-  //       return false;
-  //     }
-
-  //     return true;
-  //   },
-  //   []
-  // );
-
-  // const get = useCallback((key: string): T => {
-  //   return JSON.parse(String(localStorage.getItem(key)))
-  //     ?.value satisfies T;
-  // }, []);
-
-  // const inReadonlyMode = !(
-  //   value !== undefined && shouldSet
-  // );
-  // useEffect(() => {
-  //   if (inReadonlyMode) return;
-  //   if (prevVal.current != null && prevVal.current == value)
-  //     return;
-  //   if (!shouldSet(key, value)) return;
-  //   set(key, value);
-  //   prevVal.current = value;
-  // }, [key, value, set, shouldSet, inReadonlyMode]);
-
-  // if (inReadonlyMode) return get(key);
-
-  // return { set, get, value: get(key) };
 };
