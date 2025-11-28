@@ -106,7 +106,7 @@ type QueryFnBuilderOptions = {
   fetchOptions?: RequestInit;
 };
 
-const SERVER_ORIGIN = "http://localhost:5115";
+export const ARIX_SERVER_ORIGIN = "http://localhost:5115";
 
 export const queryFnBuilder = <TExpextedResult>(
   url: ArixEndpoint,
@@ -115,15 +115,14 @@ export const queryFnBuilder = <TExpextedResult>(
   const customFetchOptions = {
     ...queryFnBuilderOptions?.fetchOptions
   };
-  const fullUrl = `${SERVER_ORIGIN}${url}` as const;
+  const fullUrl = `${ARIX_SERVER_ORIGIN}${url}` as const;
 
   const fetchOptions: RequestInit = {
     ...customFetchOptions,
     headers: {
+      "Content-Type": "application/json",
       ...customFetchOptions.headers,
-      Authorization:
-        "Bearer " + localStorage.getItem("jwt"),
-      "Content-Type": "application/json"
+      Authorization: "Bearer " + localStorage.getItem("jwt")
     },
     credentials: "include",
     method: ARIX_ENDPOINTS_METHOD_MAP[url]
