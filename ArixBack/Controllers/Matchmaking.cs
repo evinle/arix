@@ -17,21 +17,21 @@ namespace ArixBack.Controllers
     [Authorize]
     [ApiController]
     [Route("Websocket")]
-    public class WebsocketController : ControllerBase
+    public class Matchmaking : ControllerBase
     {
-        private readonly ILogger<WebsocketController> _logger;
+        private readonly ILogger<Matchmaking> _logger;
         private WebsocketManager _websocketManager;
         private PlayerService _playerService;
 
-        public WebsocketController(ILogger<WebsocketController> logger, WebsocketManager websocketManager,PlayerService playerService)
+        public Matchmaking(ILogger<Matchmaking> logger, WebsocketManager websocketManager,PlayerService playerService)
         {
             _logger = logger;
             _websocketManager = websocketManager;
             _playerService = playerService;
         }
 
-        [HttpGet("/ws")]
-        public async Task Get()
+        [HttpGet("ws")]
+        public async Task Matchmake()
         {
             if (HttpContext.WebSockets.IsWebSocketRequest)
             {
@@ -40,6 +40,7 @@ namespace ArixBack.Controllers
                 if (userName != null)
                 {
                     using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+
                     _logger.Log(LogLevel.Information, "WebSocket connection established");
 
                     var bsonId = (await _playerService.GetPlayerFromUsername(userName))?.Id;
@@ -53,16 +54,14 @@ namespace ArixBack.Controllers
                 {
                     HttpContext.Response.StatusCode = 424;
                 }
-
-
-
             }
             else
             {
                 HttpContext.Response.StatusCode = 400;
             }
         }
-        [HttpGet("/GetAllConnections")]
+
+        [HttpGet("GetAllConnections")]
         public IEnumerable<WebSocket> GetAllConnections()
         {
             return _websocketManager.GetAllConnections();
@@ -70,6 +69,8 @@ namespace ArixBack.Controllers
 
         private async Task Echo(WebSocket webSocket,string id)
         {
+
+            //remove later - just test to see if websocket works
             var buffer = new byte[1024 * 4];
             var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             _logger.Log(LogLevel.Information, "Message received from Client");
