@@ -47,8 +47,8 @@ export const AxInput = <
           >
             <input
               className={`
-                w-full rounded-md px-2 text-lg outline-1
-                outline-pink-300
+                w-full rounded-md bg-gray-900 px-2 text-lg
+                outline-1 outline-pink-300
               `}
               type={type}
               {...field}

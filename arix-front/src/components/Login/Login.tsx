@@ -10,7 +10,7 @@ import { Link, useNavigate } from "react-router";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 type LoginProps = {
-  defaultFormValues: Partial<LoginFormInput>;
+  defaultFormValues?: Partial<LoginFormInput>;
 };
 type LoginFormInput = {
   username: string;
@@ -74,7 +74,7 @@ const Login: React.FC<LoginProps> = ({
   }, [username, password, clearErrors]);
 
   const [loginJWT, setLoginJWT] = useState<string | null>();
-  const _ = useLocalStorage("jwt", loginJWT);
+  useLocalStorage("jwt", loginJWT);
 
   useEffect(() => {
     if (!loginState) return;
