@@ -2,14 +2,20 @@ import { useEffect, useState } from "react";
 import useWebSocket, {
   ReadyState
 } from "react-use-websocket";
-import { ARIX_SERVER_ORIGIN } from "../../helpers/queryBuilder";
 import MenuItem from "../Menu/MenuItem";
 import { useNavigate } from "react-router";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
-const wsUrl = `wss://${ARIX_SERVER_ORIGIN}/Websocket/ws`;
+const wsUrl = `ws://localhost:5115/Websocket/ws`;
 const Matchmaking = () => {
+  const { value: jwt } = useLocalStorage<string>("jwt");
   const { sendMessage, lastMessage, readyState } =
-    useWebSocket(wsUrl);
+    useWebSocket(wsUrl, {
+      protocols: [`${jwt}`],
+      onClose(event) {
+        console.log("closing", event);
+      }
+    });
 
   const [messages, setMessages] = useState([]);
 

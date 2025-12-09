@@ -131,6 +131,38 @@ builder
                     Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
                 ),
             };
+            jwtOptions.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    // Specify your custom header name
+                    string customHeaderName = "Sec-Websocket-Protocol";
+                    // string token = context.Request.Headers[customHeaderName];
+
+
+                    if (context.Request.Headers.ContainsKey(customHeaderName))
+                    {
+                        Console.WriteLine(context.Request.Headers[customHeaderName].FirstOrDefault());
+                        // Assign the token to the context for processing
+                        context.Token = context.Request.Headers[customHeaderName].FirstOrDefault();
+                        return Task.CompletedTask;
+                    }
+
+                    string defaultHeaderName = "Authorization";
+
+                    if (context.Request.Headers.ContainsKey(defaultHeaderName))
+                    {
+                        Console.WriteLine(context.Request.Headers[defaultHeaderName].FirstOrDefault());
+                        // Assign the token to the context for processing
+                        context.Token = context.Request.Headers[defaultHeaderName].FirstOrDefault().Split(' ')[1];
+                        return Task.CompletedTask;
+                    }
+
+
+                    context.NoResult();
+                    return Task.CompletedTask;
+                }
+            };
 
             jwtOptions.MapInboundClaims = false;
         }
