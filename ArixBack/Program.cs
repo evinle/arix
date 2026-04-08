@@ -133,6 +133,23 @@ builder
             };
 
             jwtOptions.MapInboundClaims = false;
+
+            jwtOptions.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+
+                    // If the request is for the WebSocket endpoint, extract the token
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        (path.StartsWithSegments("/Websocket") || path.StartsWithSegments("/ws")))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         }
     )
     .AddGoogle(googleOptions =>
