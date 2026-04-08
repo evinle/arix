@@ -30,8 +30,8 @@ Competitive PvP math-based online game
 ## Auth
 
 - You will also need to set the .NET client secrets for Google
-`dotnet user-secrets set "Authentication:Google:Client_id" "<ask-maintainer-for-id>"`
-`dotnet user-secrets set "Authentication:Google:Client_secret" "<ask-maintainer-for-secret>"`
+- `dotnet user-secrets set "Authentication:Google:Client_id" "<ask-maintainer-for-id>"`
+- `dotnet user-secrets set "Authentication:Google:Client_secret" "<ask-maintainer-for-secret>"`
 
 ### Is it running properly?
 
