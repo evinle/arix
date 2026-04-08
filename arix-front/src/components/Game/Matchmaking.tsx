@@ -5,17 +5,21 @@ import useWebSocket, {
 import { ARIX_SERVER_ORIGIN } from "../../helpers/queryBuilder";
 import MenuItem from "../Menu/MenuItem";
 import { useNavigate } from "react-router";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
-const wsUrl = `wss://${ARIX_SERVER_ORIGIN}/Websocket/ws`;
 const Matchmaking = () => {
-  const { sendMessage, lastMessage, readyState } =
-    useWebSocket(wsUrl);
+  const { value: jwt } = useLocalStorage<string>("jwt");
+  const wsUrl = `${ARIX_SERVER_ORIGIN.replace(/^http/, "ws")}/Websocket/ws?access_token=${jwt}`;
 
   const [messages, setMessages] = useState([]);
 
-  useEffect(() => {
-    setMessages((m) => [...m, lastMessage] as any);
-  }, [lastMessage]);
+  const { sendMessage, readyState } =
+    useWebSocket(wsUrl, {
+      shouldReconnect: () => true,
+      onMessage: (m) => {
+        setMessages(prev => [...prev, m.data] as any)
+      }
+    });
 
   const connectionStatus = {
     [ReadyState.CONNECTING]: "Connecting",
@@ -30,8 +34,8 @@ const Matchmaking = () => {
     <div>
       <span>Status: {connectionStatus}</span>
       <ul>
-        {messages.map((m) => (
-          <li key={m}>{m}</li>
+        {messages.map((m, i) => (
+          <li key={`${m}-${i}`}>{JSON.stringify(m)}</li>
         ))}
       </ul>
 
