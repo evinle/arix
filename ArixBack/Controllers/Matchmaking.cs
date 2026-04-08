@@ -67,27 +67,25 @@ namespace ArixBack.Controllers
             return _websocketManager.GetAllConnections();
         }
 
-        private async Task Echo(WebSocket webSocket,string id)
+        private async Task Echo(WebSocket webSocket, string id)
         {
+            var buffer = new byte[1024];
 
-            //remove later - just test to see if websocket works
-            var buffer = new byte[1024 * 4];
             var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             _logger.Log(LogLevel.Information, "Message received from Client");
-            
 
-            
             while (!result.CloseStatus.HasValue)
             {
-                var serverMsg = Encoding.UTF8.GetBytes($"Server: Hello. You said: {Encoding.UTF8.GetString(buffer)}");
+                var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                var serverMsg = Encoding.UTF8.GetBytes($"Server: Hello. You said: {message}");
+
                 await webSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length), result.MessageType, result.EndOfMessage, CancellationToken.None);
                 _logger.Log(LogLevel.Information, "Message sent to Client");
 
-                buffer = new byte[1024 * 4];
                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 _logger.Log(LogLevel.Information, "Message received from Client");
-
             }
+
             await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
             _logger.Log(LogLevel.Information, "WebSocket connection closed");
             _websocketManager.RemoveConnection(id);
