@@ -23,6 +23,10 @@ namespace ArixBack.Models
       [BsonElement("gold")]
       [JsonPropertyName("gold")]
       public int Gold { get; set; }
+
+      [BsonElement("elo")]
+      [JsonPropertyName("elo")]
+      public int Elo { get; set; } = 1200;
       
 
       [BsonElement("email")]

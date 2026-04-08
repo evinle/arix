@@ -60,6 +60,10 @@ builder.Services.AddSingleton<WeaponService>();
 builder.Services.AddSingleton<PlayerService>();
 builder.Services.AddSingleton<TokenProvider>();
 builder.Services.AddSingleton<WebsocketManager>();
+builder.Services.AddSingleton<MatchmakingService>();
+builder.Services.AddSingleton<MathProblemGenerator>();
+builder.Services.AddSingleton<MatchSessionManager>();
+builder.Services.AddHostedService<MatchmakingBackgroundWorker>();
 
 //authorization for swagger - can be removed later
 builder.Services.AddSwaggerGen(c =>

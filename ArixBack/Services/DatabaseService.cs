@@ -9,11 +9,13 @@ namespace ArixBack.Services
     {
         private readonly IMongoCollection<Weapon> _weaponCollection;
         private readonly IMongoCollection<Player> _playerCollection;
+        private readonly IMongoCollection<Match> _matchCollection;
 
         public DatabaseService(IMongoDatabase database)
         {
             _weaponCollection = database.GetCollection<Weapon>("Weapons");
             _playerCollection = database.GetCollection<Player>("Player");
+            _matchCollection = database.GetCollection<Match>("Matches");
         }
 
         public IMongoCollection<Weapon> GetWeaponCollection()
@@ -23,6 +25,10 @@ namespace ArixBack.Services
         public IMongoCollection<Player> GetPlayerCollection()
         {
             return _playerCollection;
+        }
+        public IMongoCollection<Match> GetMatchCollection()
+        {
+            return _matchCollection;
         }
     }
 }
