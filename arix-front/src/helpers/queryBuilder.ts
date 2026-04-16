@@ -38,6 +38,18 @@ const ARIX_WEAPONS_ENDPOINT_NAMES = [
   "RemoveWeapon"
 ] as const;
 
+const ARIX_ARMOR_ENDPOINT_PREFIX = "/Armor/" as const;
+const ARIX_ARMOR_ENDPOINT_NAMES = [
+  "GetAllArmors"
+] as const;
+
+const ARIX_PLAYER_EQUIP_ENDPOINT_PREFIX =
+  "/Player/" as const;
+const ARIX_PLAYER_EQUIP_ENDPOINT_NAMES = [
+  "GetEquipped",
+  "Equip"
+] as const;
+
 const ARIX_MATCHMAKING_ENDPOINTS_PREFIX =
   "/Websocket/" as const;
 const ARIX_MATCHMAKING_ENDPOINTS_NAMES = [
@@ -57,6 +69,14 @@ const ARIX_WEAPONS_ENDPOINTS = mapToEndpoints(
   ARIX_WEAPONS_ENDPOINT_PREFIX,
   ARIX_WEAPONS_ENDPOINT_NAMES
 );
+const ARIX_ARMOR_ENDPOINTS = mapToEndpoints(
+  ARIX_ARMOR_ENDPOINT_PREFIX,
+  ARIX_ARMOR_ENDPOINT_NAMES
+);
+const ARIX_PLAYER_EQUIP_ENDPOINTS = mapToEndpoints(
+  ARIX_PLAYER_EQUIP_ENDPOINT_PREFIX,
+  ARIX_PLAYER_EQUIP_ENDPOINT_NAMES
+);
 const ARIX_MATCHMAKING_ENDPOINTS = mapToEndpoints(
   ARIX_MATCHMAKING_ENDPOINTS_PREFIX,
   ARIX_MATCHMAKING_ENDPOINTS_NAMES
@@ -66,6 +86,8 @@ export const ARIX_ENDPOINTS = [
   ...ARIX_LOGIN_ENDPOINTS,
   ...ARIX_PLAYER_ENDPOINTS,
   ...ARIX_WEAPONS_ENDPOINTS,
+  ...ARIX_ARMOR_ENDPOINTS,
+  ...ARIX_PLAYER_EQUIP_ENDPOINTS,
   ...ARIX_MATCHMAKING_ENDPOINTS
 ] as const;
 
@@ -95,6 +117,11 @@ const ARIX_ENDPOINTS_METHOD_MAP: {
   "/Weapons/CreateWeapon": "POST",
   "/Weapons/UpdateWeapon": "POST",
   "/Weapons/RemoveWeapon": "POST",
+
+  "/Armor/GetAllArmors": "GET",
+
+  "/Player/GetEquipped": "GET",
+  "/Player/Equip": "POST",
 
   "/Websocket/ws": "GET",
   "/Websocket/GetAllConnections": "GET"
