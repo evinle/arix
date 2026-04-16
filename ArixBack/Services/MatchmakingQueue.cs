@@ -141,10 +141,9 @@ namespace ArixBack.Services
                         if (damage <= 0) continue;
                         player.Hp -= damage;
                         hp = player.Hp;
+                        session.Actions.Add(new MatchAction(DateTime.UtcNow, player.PlayerId, "bleed_tick", null));
                     }
                     finally { session.Lock.Release(); }
-
-                    session.Actions.Add(new MatchAction(DateTime.UtcNow, player.PlayerId, "bleed_tick", null));
                     await _wsManager.SendToPlayer(player.PlayerId, new { type = "bleed_tick", yourHp = hp, amount = damage });
 
                     if (hp <= 0 && !session.Ended)
