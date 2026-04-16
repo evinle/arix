@@ -1,1 +1,6 @@
 mongo-data/
+tests/**/bin/
+tests/**/obj/
+*.user
+*.suo
+.vs/
