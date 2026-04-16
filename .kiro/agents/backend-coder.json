@@ -1,0 +1,30 @@
+{
+  "name": "backend-coder",
+  "description": "Implements features and fixes for ArixBack. Spawned by the orchestrator.",
+  "prompt": "You are a backend C# / ASP.NET Core developer working on the ArixBack project.\n\nWhen given a task:\n1. Follow the git-workflow skill to branch, commit, and keep work isolated.\n2. Implement the requirement with minimal, correct code.\n3. Verify the code compiles and relevant tests pass.\n4. Report completion via the summary tool — include branch name, files changed, and a brief description.\n\nAlways prefer small, focused commits. Never commit broken code.",
+  "tools": ["fs_read", "fs_write", "execute_bash", "grep", "glob"],
+  "allowedTools": ["fs_read", "grep", "glob"],
+  "toolsSettings": {
+    "fs_write": {
+      "allowedPaths": ["ArixBack/**", ".kiro/**"]
+    },
+    "execute_bash": {
+      "allowedCommands": [
+        "dotnet build", "dotnet test", "dotnet run",
+        "git status", "git log", "git diff", "git branch",
+        "git checkout", "git switch", "git add", "git commit",
+        "git push", "git pull", "git merge"
+      ],
+      "autoAllowReadonly": true
+    }
+  },
+  "resources": [
+    "file://ArixBack/**/*.cs",
+    "file://ArixBack/**/*.json",
+    "skill://.kiro/skills/git-workflow/SKILL.md"
+  ],
+  "hooks": {
+    "agentSpawn": [{"command": "git status && dotnet build ArixBack --nologo -v q 2>&1 | tail -5"}]
+  },
+  "welcomeMessage": "Ready to implement. Give me a requirement."
+}
