@@ -264,7 +264,7 @@ namespace ArixBack.Controllers
                         await _wsManager.SendToPlayer(playerId, new { type = "curse_removed" });
                     if (selfHp <= 0 || opponentHp <= 0)
                     {
-                        await CheckGameOver(session, playerId, opponent.PlayerId);
+                        await CheckGameOver(session, playerId, opponent.PlayerId, selfHp, opponentHp);
                         return;
                     }
                 }
@@ -279,7 +279,7 @@ namespace ArixBack.Controllers
 
             if (gameOver)
             {
-                await CheckGameOver(session, playerId, opponent.PlayerId);
+                await CheckGameOver(session, playerId, opponent.PlayerId, selfHp, opponentHp);
                 return;
             }
 
@@ -308,7 +308,7 @@ namespace ArixBack.Controllers
 
             await SendHitBoth(session, selfHp, opponentHp, self.PlayerId, opponent.PlayerId, 0, 10, null);
 
-            if (await CheckGameOver(session, playerId, opponent.PlayerId)) return;
+            if (await CheckGameOver(session, playerId, opponent.PlayerId, selfHp, opponentHp)) return;
 
             await session.Lock.WaitAsync();
             Question nextQuestion;
@@ -332,7 +332,7 @@ namespace ArixBack.Controllers
 
             if (self.ClassType != ArixBack.Models.ClassType.Berserker) return;
 
-            int charge, damageDealt, damageTaken;
+            int charge, damageDealt, damageTaken, selfHp, opponentHp;
             string? effect;
             await session.Lock.WaitAsync();
             try
@@ -344,14 +344,16 @@ namespace ArixBack.Controllers
                 damageDealt = hitResult.DamageToSelf;
                 damageTaken = hitResult.DamageToOpponent;
                 effect = hitResult.EffectMessage;
+                selfHp = self.Hp;
+                opponentHp = opponent.Hp;
                 session.Actions.Add(new MatchAction(DateTime.UtcNow, playerId, "charge_release",
                     JsonSerializer.Serialize(new { damage = charge })));
             }
             finally { session.Lock.Release(); }
 
-            await SendHitBoth(session, self.Hp, opponent.Hp, self.PlayerId, opponent.PlayerId, damageDealt, damageTaken, effect);
+            await SendHitBoth(session, selfHp, opponentHp, self.PlayerId, opponent.PlayerId, damageDealt, damageTaken, effect);
 
-            await CheckGameOver(session, playerId, opponent.PlayerId);
+            await CheckGameOver(session, playerId, opponent.PlayerId, selfHp, opponentHp);
         }
 
         private async Task SendHitBoth(MatchSession session, int selfHp, int opponentHp, string selfId, string opponentId, int damageDealt, int damageTaken, string? effect)
@@ -376,22 +378,19 @@ namespace ArixBack.Controllers
             });
         }
 
-        private async Task<bool> CheckGameOver(MatchSession session, string attackerId, string defenderId)
+        private async Task<bool> CheckGameOver(MatchSession session, string attackerId, string defenderId, int selfHp, int opponentHp)
         {
-            var self = session.GetPlayer(attackerId)!;
-            var opponent = session.GetPlayer(defenderId)!;
-
-            if (self.Hp <= 0 && opponent.Hp <= 0)
+            if (selfHp <= 0 && opponentHp <= 0)
             {
                 await _matchEndService.EndMatch(session, defenderId, attackerId);
                 return true;
             }
-            if (opponent.Hp <= 0)
+            if (opponentHp <= 0)
             {
                 await _matchEndService.EndMatch(session, attackerId, defenderId);
                 return true;
             }
-            if (self.Hp <= 0)
+            if (selfHp <= 0)
             {
                 await _matchEndService.EndMatch(session, defenderId, attackerId);
                 return true;
