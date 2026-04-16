@@ -104,10 +104,11 @@ function reducer(state: MatchState, action: Action): MatchState {
           description: `Dealt ${action.damageDealt}, took ${action.damageTaken}${action.effect ? ` (${action.effect})` : ""}`
         }
       ];
-      const chargePoints =
+      const parsed =
         state.yourClass === "Berserker" && action.effect?.startsWith("charge:")
           ? Number(action.effect.slice("charge:".length))
-          : state.chargePoints;
+          : NaN;
+      const chargePoints = !isNaN(parsed) ? parsed : state.chargePoints;
       return {
         ...state,
         yourHp: action.yourHp,
