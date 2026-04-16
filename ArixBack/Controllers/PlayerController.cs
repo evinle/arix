@@ -72,7 +72,7 @@ namespace ArixBack.Controllers
             if (userName == null) return Unauthorized();
             var player = await _db.GetPlayerFromUsername(userName);
             if (player == null) return NotFound();
-            return Ok(new { weaponId = player.EquippedWeaponId, armorId = player.EquippedArmorId, classType = player.ClassType, elo = player.Elo });
+            return Ok(new { weaponId = player.EquippedWeaponId, armorId = player.EquippedArmorId, playerClass = player.ClassType.ToString(), elo = player.Elo });
         }
 
         [Authorize]
@@ -86,7 +86,8 @@ namespace ArixBack.Controllers
 
             if (req.WeaponId != null) player.EquippedWeaponId = req.WeaponId;
             if (req.ArmorId != null) player.EquippedArmorId = req.ArmorId;
-            player.ClassType = (ClassType)req.ClassType;
+            if (req.PlayerClass != null && Enum.TryParse<ClassType>(req.PlayerClass, out var ct))
+                player.ClassType = ct;
 
             await _db.UpdatePlayer(player.Id, player);
             return Ok();
@@ -97,6 +98,6 @@ namespace ArixBack.Controllers
     {
         public string? WeaponId { get; set; }
         public string? ArmorId { get; set; }
-        public int ClassType { get; set; }
+        public string? PlayerClass { get; set; }
     }
 }

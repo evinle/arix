@@ -146,9 +146,11 @@ namespace ArixBack.Services
                     finally { session.Lock.Release(); }
                     await _wsManager.SendToPlayer(player.PlayerId, new { type = "bleed_tick", yourHp = hp, amount = damage });
 
+                    var opponent = session.GetOpponent(player.PlayerId)!;
+                    await _wsManager.SendToPlayer(opponent.PlayerId, new { type = "opponent_bleed", opponentHp = hp, amount = damage });
+
                     if (hp <= 0 && !session.Ended)
                     {
-                        var opponent = session.GetOpponent(player.PlayerId)!;
                         await _matchEndService.EndMatch(session, opponent.PlayerId, player.PlayerId);
                         return;
                     }
