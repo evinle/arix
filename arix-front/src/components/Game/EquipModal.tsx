@@ -5,7 +5,7 @@ import type { Armor, EquipRequest, EquippedResponse } from "../../apiTypes/match
 import type { Weapon } from "../../apiTypes/weapons.type";
 
 type EquipModalProps = {
-  onConfirm: (skillTier: number, playerClass: string) => void;
+  onConfirm: (skillTier: number) => void;
   onClose: () => void;
 };
 
@@ -51,7 +51,7 @@ export function EquipModal({ onConfirm, onClose }: EquipModalProps): React.React
       credentials: "include",
       body: JSON.stringify(body)
     });
-    onConfirm(skillTier, playerClass);
+    onConfirm(skillTier);
   };
 
   return (

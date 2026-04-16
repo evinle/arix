@@ -64,6 +64,7 @@ type Action =
       effect: string | null;
     }
   | { type: "BLEED_TICK"; yourHp: number; amount: number }
+  | { type: "OPPONENT_BLEED"; opponentHp: number; amount: number }
   | { type: "CURSE_APPLIED"; questionsAffected: number }
   | { type: "CURSE_REMOVED" }
   | {
@@ -127,6 +128,15 @@ function reducer(state: MatchState, action: Action): MatchState {
           { actor: "bleed", description: `Bleed tick: -${action.amount} HP` }
         ]
       };
+    case "OPPONENT_BLEED":
+      return {
+        ...state,
+        opponentHp: action.opponentHp,
+        actionLog: [
+          ...state.actionLog,
+          { actor: "bleed", description: `Opponent bleed tick: -${action.amount} HP` }
+        ]
+      };
     case "CURSE_APPLIED":
       return {
         ...state,
@@ -159,7 +169,7 @@ function parseServerMsg(raw: string): ServerMsg | null {
   }
 }
 
-export function useMatch(yourClass: string): MatchState & {
+export function useMatch(): MatchState & {
   sendAnswer: (questionId: string, value: number) => void;
   sendSkip: () => void;
   releaseCharge: () => void;
@@ -169,10 +179,7 @@ export function useMatch(yourClass: string): MatchState & {
   const { value: jwt } = useLocalStorage<string>("jwt");
   const wsUrl = `${ARIX_SERVER_ORIGIN.replace(/^http/, "ws")}/Websocket/ws?access_token=${jwt ?? ""}`;
 
-  const [state, dispatch] = useReducer(reducer, {
-    ...INITIAL_STATE,
-    yourClass
-  });
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
 
   const { sendMessage } = useWebSocket(wsUrl, {
     shouldReconnect: () => true,
@@ -191,7 +198,7 @@ export function useMatch(yourClass: string): MatchState & {
             yourHp: msg.yourHp,
             opponentHp: msg.opponentHp,
             question: msg.question,
-            yourClass
+            yourClass: msg.yourClass
           });
           break;
         case "question":
@@ -214,6 +221,13 @@ export function useMatch(yourClass: string): MatchState & {
           dispatch({
             type: "BLEED_TICK",
             yourHp: msg.yourHp,
+            amount: msg.amount
+          });
+          break;
+        case "opponent_bleed":
+          dispatch({
+            type: "OPPONENT_BLEED",
+            opponentHp: msg.opponentHp,
             amount: msg.amount
           });
           break;

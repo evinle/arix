@@ -7,9 +7,8 @@ import MenuItem from "../Menu/MenuItem";
 const Matchmaking = (): React.ReactElement => {
   const navigate = useNavigate();
   const [showEquip, setShowEquip] = useState(false);
-  const [yourClass, setYourClass] = useState("Rogue");
 
-  const match = useMatch(yourClass);
+  const match = useMatch();
 
   const [answer, setAnswer] = useState("");
   const answerRef = useRef<HTMLInputElement>(null);
@@ -30,8 +29,7 @@ const Matchmaking = (): React.ReactElement => {
     }
   }, [match.actionLog]);
 
-  const handleConfirm = (skillTier: number, playerClass: string): void => {
-    setYourClass(playerClass);
+  const handleConfirm = (skillTier: number): void => {
     setShowEquip(false);
     match.joinQueue(skillTier);
   };

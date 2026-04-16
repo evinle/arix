@@ -7,6 +7,7 @@ export type ServerMsg =
       type: "match_start";
       opponentName: string;
       opponentClass: string;
+      yourClass: string;
       yourHp: number;
       opponentHp: number;
       question: MatchQuestion;
@@ -22,6 +23,7 @@ export type ServerMsg =
       effect: string | null;
     }
   | { type: "bleed_tick"; yourHp: number; amount: number }
+  | { type: "opponent_bleed"; opponentHp: number; amount: number }
   | { type: "curse_applied"; questionsAffected: number }
   | { type: "curse_removed" }
   | {
