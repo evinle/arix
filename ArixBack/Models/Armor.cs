@@ -4,24 +4,22 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ArixBack.Models
 {
-    public class Weapon
+    public class Armor
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
-        [BsonElement("weaponName")]
-        [JsonPropertyName("weaponName")]
-        public required string WeaponName { get; set; }
+        [BsonElement("name")]
+        [JsonPropertyName("name")]
+        public required string Name { get; set; }
 
-        [BsonElement("damageModifier")]
-        [JsonPropertyName("damageModifier")]
-        public double DamageModifier { get; set; } = 1.0;
+        [BsonElement("damageReductionModifier")]
+        [JsonPropertyName("damageReductionModifier")]
+        public double DamageReductionModifier { get; set; } = 1.0;
 
         [BsonElement("specialEffect")]
         [JsonPropertyName("specialEffect")]
         public string? SpecialEffect { get; set; }
-
-        public Weapon() { }
     }
 }

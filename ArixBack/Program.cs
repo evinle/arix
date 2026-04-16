@@ -33,8 +33,6 @@ builder.Services.AddCors(options =>
     );
 });
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -57,11 +55,17 @@ builder.Services.AddSingleton(sp =>
 
 builder.Services.AddSingleton<DatabaseService>();
 builder.Services.AddSingleton<WeaponService>();
+builder.Services.AddSingleton<ArmorService>();
 builder.Services.AddSingleton<PlayerService>();
 builder.Services.AddSingleton<TokenProvider>();
 builder.Services.AddSingleton<WebsocketManager>();
+builder.Services.AddSingleton<MatchSessionStore>();
+builder.Services.AddSingleton<MatchmakingQueue>();
+builder.Services.AddSingleton<QuestionService>();
+builder.Services.AddSingleton<EloService>();
+builder.Services.AddSingleton<ClassEffectService>();
+builder.Services.AddSingleton<MatchLogService>();
 
-//authorization for swagger - can be removed later
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition(
@@ -108,7 +112,6 @@ builder
     .Services.AddAuthentication(options =>
     {
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        // options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
@@ -139,8 +142,6 @@ builder
                 OnMessageReceived = context =>
                 {
                     var accessToken = context.Request.Query["access_token"];
-
-                    // If the request is for the WebSocket endpoint, extract the token
                     var path = context.HttpContext.Request.Path;
                     if (!string.IsNullOrEmpty(accessToken) &&
                         (path.StartsWithSegments("/Websocket") || path.StartsWithSegments("/ws")))
@@ -181,7 +182,6 @@ app.UseAuthorization();
 
 app.UseWebSockets();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -194,5 +194,10 @@ app.MapControllers();
 app.UseHttpsRedirection();
 
 app.MapGet("/", () => "MongoDB connected!");
+
+// Start matchmaking background loop
+var queue = app.Services.GetRequiredService<MatchmakingQueue>();
+var cts = new CancellationTokenSource();
+queue.StartBackground(cts.Token);
 
 app.Run();

@@ -1,35 +1,32 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.WebSockets;
-using System.Threading.Tasks;
+using System.Text;
+using System.Text.Json;
 
 namespace ArixBack.Services
 {
     public class WebsocketManager
     {
-    private readonly ConcurrentDictionary<string, WebSocket> _connections = new ConcurrentDictionary<string, WebSocket>();
+        private readonly ConcurrentDictionary<string, WebSocket> _connections = new();
 
-        public void AddConnection(string id, WebSocket webSocket)
-        {
-            _connections.TryAdd(id, webSocket);
-        }
+        public void AddConnection(string id, WebSocket webSocket) => _connections.TryAdd(id, webSocket);
 
-        public void RemoveConnection(string id)
-        {
-            _connections.TryRemove(id, out _);
-        }
+        public void RemoveConnection(string id) => _connections.TryRemove(id, out _);
 
-        public IEnumerable<WebSocket> GetAllConnections()
-        {
-            return _connections.Values;
-        }
+        public IEnumerable<WebSocket> GetAllConnections() => _connections.Values;
 
-        public WebSocket GetConnection(string id)
+        public WebSocket? GetConnection(string id)
         {
             _connections.TryGetValue(id, out var webSocket);
             return webSocket;
+        }
+
+        public async Task SendToPlayer(string playerId, object message)
+        {
+            if (!_connections.TryGetValue(playerId, out var ws)) return;
+            if (ws.State != WebSocketState.Open) return;
+            var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+            await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
         }
     }
 }

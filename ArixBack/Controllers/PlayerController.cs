@@ -1,32 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
 using ArixBack.Models;
-using System.Diagnostics;
-using System.Data.Common;
 using ArixBack.Services;
 using MongoDB.Driver;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using MongoDB.Bson;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+
 namespace ArixBack.Controllers
 {
-    //[Authorize]
     [ApiController]
     [Route("/players")]
     public class PlayerController : ControllerBase
     {
-
         private PlayerService _db;
 
         public PlayerController(PlayerService db)
         {
             _db = db;
         }
-        [HttpGet("GetAllPlayers")]
-        public async Task<ActionResult<List<Player>>> GetAllPlayers()
-        {
 
-            return Ok(await _db.GetPlayers());
-        }
+        [HttpGet("GetAllPlayers")]
+        public async Task<ActionResult<List<Player>>> GetAllPlayers() => Ok(await _db.GetPlayers());
 
         [HttpGet("GetPlayerFromId")]
         public async Task<ActionResult<Player>> GetPlayerFromId(string id)
@@ -36,7 +31,6 @@ namespace ArixBack.Controllers
             return Ok(player);
         }
 
-
         [HttpGet("GetPlayerFromUsername")]
         public async Task<ActionResult<Player>> GetPlayerFromUsername(string username)
         {
@@ -44,15 +38,16 @@ namespace ArixBack.Controllers
             if (player == null) return NotFound($"No player with ID: {username}");
             return Ok(player);
         }
+
         [HttpPost("CreatePlayer")]
         public async Task<ActionResult> CreatePlayer(Player player)
         {
             if (player == null) return BadRequest("No player provided");
-
             player.Id = null;
             await _db.CreatePlayer(player);
             return Ok();
         }
+
         [HttpPost("UpdatePlayer")]
         public async Task<ActionResult> UpdatePlayer(Player player)
         {
@@ -60,13 +55,48 @@ namespace ArixBack.Controllers
             await _db.UpdatePlayer(player.Id, player);
             return Ok();
         }
+
         [HttpPost("RemovePlayer")]
-            public async Task<ActionResult> RemovePlayer(string id)
+        public async Task<ActionResult> RemovePlayer(string id)
         {
             var deletedRow = await _db.RemovePlayer(id);
             if (deletedRow.DeletedCount == 0) return BadRequest($"Could not delete player with ID: {id}");
             return Ok(deletedRow.ToJson());
         }
 
+        [Authorize]
+        [HttpGet("GetEquipped")]
+        public async Task<ActionResult> GetEquipped()
+        {
+            var userName = User.FindFirstValue(JwtRegisteredClaimNames.NameId);
+            if (userName == null) return Unauthorized();
+            var player = await _db.GetPlayerFromUsername(userName);
+            if (player == null) return NotFound();
+            return Ok(new { weaponId = player.EquippedWeaponId, armorId = player.EquippedArmorId, classType = player.ClassType, elo = player.Elo });
+        }
+
+        [Authorize]
+        [HttpPost("Equip")]
+        public async Task<ActionResult> Equip([FromBody] EquipRequest req)
+        {
+            var userName = User.FindFirstValue(JwtRegisteredClaimNames.NameId);
+            if (userName == null) return Unauthorized();
+            var player = await _db.GetPlayerFromUsername(userName);
+            if (player?.Id == null) return NotFound();
+
+            if (req.WeaponId != null) player.EquippedWeaponId = req.WeaponId;
+            if (req.ArmorId != null) player.EquippedArmorId = req.ArmorId;
+            player.ClassType = (ClassType)req.ClassType;
+
+            await _db.UpdatePlayer(player.Id, player);
+            return Ok();
+        }
+    }
+
+    public class EquipRequest
+    {
+        public string? WeaponId { get; set; }
+        public string? ArmorId { get; set; }
+        public int ClassType { get; set; }
     }
 }
