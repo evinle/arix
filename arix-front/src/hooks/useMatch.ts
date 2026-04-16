@@ -105,8 +105,8 @@ function reducer(state: MatchState, action: Action): MatchState {
         }
       ];
       const chargePoints =
-        state.yourClass === "Berserker"
-          ? state.chargePoints + action.damageDealt
+        state.yourClass === "Berserker" && action.effect?.startsWith("charge:")
+          ? Number(action.effect.slice("charge:".length))
           : state.chargePoints;
       return {
         ...state,
