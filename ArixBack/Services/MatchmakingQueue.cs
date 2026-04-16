@@ -22,12 +22,21 @@ namespace ArixBack.Services
         private readonly MatchSessionStore _sessionStore;
         private readonly WebsocketManager _wsManager;
         private readonly QuestionService _questionService;
+        private readonly ClassEffectService _classEffects;
+        private readonly MatchEndService _matchEndService;
 
-        public MatchmakingQueue(MatchSessionStore sessionStore, WebsocketManager wsManager, QuestionService questionService)
+        public MatchmakingQueue(
+            MatchSessionStore sessionStore,
+            WebsocketManager wsManager,
+            QuestionService questionService,
+            ClassEffectService classEffects,
+            MatchEndService matchEndService)
         {
             _sessionStore = sessionStore;
             _wsManager = wsManager;
             _questionService = questionService;
+            _classEffects = classEffects;
+            _matchEndService = matchEndService;
         }
 
         public void Enqueue(QueueEntry entry) => _queue.Enqueue(entry);
@@ -109,6 +118,34 @@ namespace ArixBack.Services
                 question = new { id = p2.CurrentQuestion.Id, text = p2.CurrentQuestion.Text },
                 skillTier = b.SkillTier
             });
+
+            _ = RunBleedLoop(session);
+        }
+
+        private async Task RunBleedLoop(MatchSession session)
+        {
+            while (!session.Ended)
+            {
+                await Task.Delay(5000);
+                if (session.Ended) break;
+
+                foreach (var player in new[] { session.Player1, session.Player2 })
+                {
+                    int damage = _classEffects.TickBleed(player);
+                    if (damage <= 0) continue;
+
+                    player.Hp -= damage;
+                    session.Actions.Add(new MatchAction(DateTime.UtcNow, player.PlayerId, "bleed_tick", null));
+                    await _wsManager.SendToPlayer(player.PlayerId, new { type = "bleed_tick", yourHp = player.Hp, amount = damage });
+
+                    if (player.Hp <= 0 && !session.Ended)
+                    {
+                        var opponent = session.GetOpponent(player.PlayerId)!;
+                        await _matchEndService.EndMatch(session, opponent.PlayerId, player.PlayerId);
+                        return;
+                    }
+                }
+            }
         }
 
         private static PlayerMatchState ToMatchState(QueueEntry e) => new()

@@ -65,6 +65,7 @@ builder.Services.AddSingleton<QuestionService>();
 builder.Services.AddSingleton<EloService>();
 builder.Services.AddSingleton<ClassEffectService>();
 builder.Services.AddSingleton<MatchLogService>();
+builder.Services.AddSingleton<MatchEndService>();
 
 builder.Services.AddSwaggerGen(c =>
 {

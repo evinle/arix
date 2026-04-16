@@ -23,8 +23,7 @@ namespace ArixBack.Controllers
         private readonly MatchmakingQueue _queue;
         private readonly MatchSessionStore _sessionStore;
         private readonly ClassEffectService _classEffects;
-        private readonly EloService _eloService;
-        private readonly MatchLogService _matchLogService;
+        private readonly MatchEndService _matchEndService;
         private readonly QuestionService _questionService;
 
         public Matchmaking(
@@ -36,8 +35,7 @@ namespace ArixBack.Controllers
             MatchmakingQueue queue,
             MatchSessionStore sessionStore,
             ClassEffectService classEffects,
-            EloService eloService,
-            MatchLogService matchLogService,
+            MatchEndService matchEndService,
             QuestionService questionService)
         {
             _logger = logger;
@@ -48,8 +46,7 @@ namespace ArixBack.Controllers
             _queue = queue;
             _sessionStore = sessionStore;
             _classEffects = classEffects;
-            _eloService = eloService;
-            _matchLogService = matchLogService;
+            _matchEndService = matchEndService;
             _questionService = questionService;
         }
 
@@ -87,14 +84,13 @@ namespace ArixBack.Controllers
             finally
             {
                 _wsManager.RemoveConnection(playerId);
-                // Handle disconnect: if in active match, opponent wins
                 var session = _sessionStore.GetSessionByPlayer(playerId);
                 if (session != null && !session.Ended)
                 {
                     var opponent = session.GetOpponent(playerId);
                     var self = session.GetPlayer(playerId);
                     if (opponent != null && self != null)
-                        await EndMatch(session, opponent.PlayerId, self.PlayerId);
+                        await _matchEndService.EndMatch(session, opponent.PlayerId, self.PlayerId);
                 }
             }
         }
@@ -201,7 +197,6 @@ namespace ArixBack.Controllers
 
             if (!correct)
             {
-                // Wrong answer on cursed question: lose 15 HP
                 if (self.CursedQuestionsRemaining > 0)
                 {
                     self.CursedQuestionsRemaining--;
@@ -211,14 +206,12 @@ namespace ArixBack.Controllers
                         await _wsManager.SendToPlayer(playerId, new { type = "curse_removed" });
                     if (await CheckGameOver(session, playerId, opponent.PlayerId)) return;
                 }
-                // Assign new question
                 self.CorrectStreak = 0;
                 self.CurrentQuestion = _questionService.GetTier(self.SkillTier).Generate();
                 await _wsManager.SendToPlayer(playerId, new { type = "question", id = self.CurrentQuestion.Id, text = self.CurrentQuestion.Text });
                 return;
             }
 
-            // Correct answer
             if (self.CursedQuestionsRemaining > 0)
                 self.CursedQuestionsRemaining--;
 
@@ -226,8 +219,8 @@ namespace ArixBack.Controllers
             var effectResult = _classEffects.ApplyOnCorrectAnswer(self, opponent, baseDamage);
             var hitResult = _classEffects.ApplyOnHit(opponent, effectResult.DamageToOpponent);
 
-            opponent.Hp -= hitResult.DamageToSelf; // reduced damage to opponent
-            self.Hp -= hitResult.DamageToOpponent; // juggernaut reflect
+            opponent.Hp -= hitResult.DamageToSelf;
+            self.Hp -= hitResult.DamageToOpponent;
             self.Hp += effectResult.HealSelf;
 
             string? effect = effectResult.EffectMessage ?? hitResult.EffectMessage;
@@ -235,7 +228,6 @@ namespace ArixBack.Controllers
             session.Actions.Add(new MatchAction(DateTime.UtcNow, playerId, "correct_answer",
                 JsonSerializer.Serialize(new { damage = hitResult.DamageToSelf, effect })));
 
-            // Notify curse applied
             if (effectResult.EffectMessage == "curse_applied")
                 await _wsManager.SendToPlayer(opponent.PlayerId, new { type = "curse_applied", questionsAffected = 3 });
 
@@ -243,7 +235,6 @@ namespace ArixBack.Controllers
 
             if (await CheckGameOver(session, playerId, opponent.PlayerId)) return;
 
-            // New question for answerer
             self.CurrentQuestion = _questionService.GetTier(self.SkillTier).Generate();
             await _wsManager.SendToPlayer(playerId, new { type = "question", id = self.CurrentQuestion.Id, text = self.CurrentQuestion.Text });
         }
@@ -321,58 +312,20 @@ namespace ArixBack.Controllers
 
             if (self.Hp <= 0 && opponent.Hp <= 0)
             {
-                // Both dead — attacker loses (edge case)
-                await EndMatch(session, defenderId, attackerId);
+                await _matchEndService.EndMatch(session, defenderId, attackerId);
                 return true;
             }
             if (opponent.Hp <= 0)
             {
-                await EndMatch(session, attackerId, defenderId);
+                await _matchEndService.EndMatch(session, attackerId, defenderId);
                 return true;
             }
             if (self.Hp <= 0)
             {
-                await EndMatch(session, defenderId, attackerId);
+                await _matchEndService.EndMatch(session, defenderId, attackerId);
                 return true;
             }
             return false;
-        }
-
-        private async Task EndMatch(MatchSession session, string winnerId, string loserId)
-        {
-            if (session.Ended) return;
-            session.Ended = true;
-
-            var winner = session.GetPlayer(winnerId)!;
-            var loser = session.GetPlayer(loserId)!;
-
-            var (newWinnerElo, newLoserElo) = _eloService.Calculate(winner.Elo, loser.Elo);
-            int winnerEloChange = newWinnerElo - winner.Elo;
-            int loserEloChange = newLoserElo - loser.Elo;
-
-            // Update DB
-            var winnerPlayer = await _playerService.GetPlayerFromId(winnerId);
-            var loserPlayer = await _playerService.GetPlayerFromId(loserId);
-            if (winnerPlayer?.Id != null) { winnerPlayer.Elo = newWinnerElo; await _playerService.UpdatePlayer(winnerPlayer.Id, winnerPlayer); }
-            if (loserPlayer?.Id != null) { loserPlayer.Elo = newLoserElo; await _playerService.UpdatePlayer(loserPlayer.Id, loserPlayer); }
-
-            session.Actions.Add(new MatchAction(DateTime.UtcNow, winnerId, "game_over", JsonSerializer.Serialize(new { winnerId })));
-
-            var log = new MatchLog
-            {
-                Player1Id = session.Player1.PlayerId,
-                Player2Id = session.Player2.PlayerId,
-                StartedAt = session.StartedAt,
-                EndedAt = DateTime.UtcNow,
-                WinnerId = winnerId,
-                Actions = session.Actions
-            };
-            await _matchLogService.SaveLog(log);
-
-            await _wsManager.SendToPlayer(winnerId, new { type = "game_over", won = true, eloChange = winnerEloChange, log = session.Actions });
-            await _wsManager.SendToPlayer(loserId, new { type = "game_over", won = false, eloChange = loserEloChange, log = session.Actions });
-
-            _sessionStore.RemoveSession(session.SessionId);
         }
 
         [HttpGet("GetAllConnections")]
