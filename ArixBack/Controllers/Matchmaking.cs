@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using ArixBack.Models;
 using ArixBack.Services;
+using ArixBack.Services.Questions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -189,54 +190,100 @@ namespace ArixBack.Controllers
             var questionId = msg.GetProperty("questionId").GetString();
             var value = msg.GetProperty("value").ToString();
 
-            if (self.CurrentQuestion == null || self.CurrentQuestion.Id != questionId)
-                return;
+            await session.Lock.WaitAsync();
+            bool correct;
+            bool cursedWrong = false;
+            int baseDamage = 0;
+            EffectResult? effectResult = null;
+            EffectResult? hitResult = null;
+            string? effect = null;
+            int selfHp = 0, opponentHp = 0, damageDealt = 0, damageTaken = 0;
+            Question? nextQuestion = null;
+            bool gameOver = false;
+            try
+            {
+                if (session.Ended) return;
+                if (self.CurrentQuestion == null || self.CurrentQuestion.Id != questionId) return;
 
-            var tier = _questionService.GetTier(self.CursedQuestionsRemaining > 0 ? Math.Min(self.SkillTier + 1, 4) : self.SkillTier);
-            bool correct = tier.Validate(self.CurrentQuestion, value);
+                var tier = _questionService.GetTier(self.CursedQuestionsRemaining > 0 ? Math.Min(self.SkillTier + 1, 4) : self.SkillTier);
+                correct = tier.Validate(self.CurrentQuestion, value);
+
+                if (!correct)
+                {
+                    if (self.CursedQuestionsRemaining > 0)
+                    {
+                        self.CursedQuestionsRemaining--;
+                        self.Hp -= 15;
+                        session.Actions.Add(new MatchAction(DateTime.UtcNow, playerId, "wrong_cursed", null));
+                        cursedWrong = true;
+                    }
+                    self.CorrectStreak = 0;
+                    self.CurrentQuestion = _questionService.GetTier(self.SkillTier).Generate();
+                    nextQuestion = self.CurrentQuestion;
+                    selfHp = self.Hp;
+                    opponentHp = opponent.Hp;
+                }
+                else
+                {
+                    if (self.CursedQuestionsRemaining > 0)
+                        self.CursedQuestionsRemaining--;
+
+                    baseDamage = (int)(20 * self.WeaponDamageModifier);
+                    effectResult = _classEffects.ApplyOnCorrectAnswer(self, opponent, baseDamage);
+                    hitResult = _classEffects.ApplyOnHit(opponent, effectResult.DamageToOpponent);
+
+                    opponent.Hp -= hitResult.DamageToSelf;
+                    self.Hp -= hitResult.DamageToOpponent;
+                    self.Hp += effectResult.HealSelf;
+
+                    effect = effectResult.EffectMessage ?? hitResult.EffectMessage;
+                    damageDealt = hitResult.DamageToSelf;
+                    damageTaken = hitResult.DamageToOpponent;
+                    selfHp = self.Hp;
+                    opponentHp = opponent.Hp;
+
+                    session.Actions.Add(new MatchAction(DateTime.UtcNow, playerId, "correct_answer",
+                        JsonSerializer.Serialize(new { damage = hitResult.DamageToSelf, effect })));
+
+                    if (self.Hp <= 0 || opponent.Hp <= 0)
+                        gameOver = true;
+                    else
+                    {
+                        self.CurrentQuestion = _questionService.GetTier(self.SkillTier).Generate();
+                        nextQuestion = self.CurrentQuestion;
+                    }
+                }
+            }
+            finally { session.Lock.Release(); }
 
             if (!correct)
             {
-                if (self.CursedQuestionsRemaining > 0)
+                if (cursedWrong)
                 {
-                    self.CursedQuestionsRemaining--;
-                    self.Hp -= 15;
-                    session.Actions.Add(new MatchAction(DateTime.UtcNow, playerId, "wrong_cursed", null));
                     if (self.CursedQuestionsRemaining == 0)
                         await _wsManager.SendToPlayer(playerId, new { type = "curse_removed" });
-                    if (await CheckGameOver(session, playerId, opponent.PlayerId)) return;
+                    if (selfHp <= 0 || opponentHp <= 0)
+                    {
+                        await CheckGameOver(session, playerId, opponent.PlayerId);
+                        return;
+                    }
                 }
-                self.CorrectStreak = 0;
-                self.CurrentQuestion = _questionService.GetTier(self.SkillTier).Generate();
-                await _wsManager.SendToPlayer(playerId, new { type = "question", id = self.CurrentQuestion.Id, text = self.CurrentQuestion.Text });
+                await _wsManager.SendToPlayer(playerId, new { type = "question", id = nextQuestion!.Id, text = nextQuestion.Text });
                 return;
             }
 
-            if (self.CursedQuestionsRemaining > 0)
-                self.CursedQuestionsRemaining--;
-
-            int baseDamage = (int)(20 * self.WeaponDamageModifier);
-            var effectResult = _classEffects.ApplyOnCorrectAnswer(self, opponent, baseDamage);
-            var hitResult = _classEffects.ApplyOnHit(opponent, effectResult.DamageToOpponent);
-
-            opponent.Hp -= hitResult.DamageToSelf;
-            self.Hp -= hitResult.DamageToOpponent;
-            self.Hp += effectResult.HealSelf;
-
-            string? effect = effectResult.EffectMessage ?? hitResult.EffectMessage;
-
-            session.Actions.Add(new MatchAction(DateTime.UtcNow, playerId, "correct_answer",
-                JsonSerializer.Serialize(new { damage = hitResult.DamageToSelf, effect })));
-
-            if (effectResult.EffectMessage == "curse_applied")
+            if (effectResult!.EffectMessage == "curse_applied")
                 await _wsManager.SendToPlayer(opponent.PlayerId, new { type = "curse_applied", questionsAffected = 3 });
 
-            await SendHitBoth(session, self, opponent, hitResult.DamageToSelf, hitResult.DamageToOpponent, effect);
+            await SendHitBoth(session, selfHp, opponentHp, self.PlayerId, opponent.PlayerId, damageDealt, damageTaken, effect);
 
-            if (await CheckGameOver(session, playerId, opponent.PlayerId)) return;
+            if (gameOver)
+            {
+                await CheckGameOver(session, playerId, opponent.PlayerId);
+                return;
+            }
 
-            self.CurrentQuestion = _questionService.GetTier(self.SkillTier).Generate();
-            await _wsManager.SendToPlayer(playerId, new { type = "question", id = self.CurrentQuestion.Id, text = self.CurrentQuestion.Text });
+            await _wsManager.SendToPlayer(playerId, new { type = "question", id = nextQuestion!.Id, text = nextQuestion.Text });
         }
 
         private async Task HandleSkip(string playerId)
@@ -247,16 +294,32 @@ namespace ArixBack.Controllers
             var self = session.GetPlayer(playerId)!;
             var opponent = session.GetOpponent(playerId)!;
 
-            self.Hp -= 10;
-            self.CorrectStreak = 0;
-            session.Actions.Add(new MatchAction(DateTime.UtcNow, playerId, "skip", null));
+            int selfHp, opponentHp;
+            await session.Lock.WaitAsync();
+            try
+            {
+                self.Hp -= 10;
+                self.CorrectStreak = 0;
+                session.Actions.Add(new MatchAction(DateTime.UtcNow, playerId, "skip", null));
+                selfHp = self.Hp;
+                opponentHp = opponent.Hp;
+            }
+            finally { session.Lock.Release(); }
 
-            await SendHitBoth(session, self, opponent, 0, 10, null);
+            await SendHitBoth(session, selfHp, opponentHp, self.PlayerId, opponent.PlayerId, 0, 10, null);
 
             if (await CheckGameOver(session, playerId, opponent.PlayerId)) return;
 
-            self.CurrentQuestion = _questionService.GetTier(self.SkillTier).Generate();
-            await _wsManager.SendToPlayer(playerId, new { type = "question", id = self.CurrentQuestion.Id, text = self.CurrentQuestion.Text });
+            await session.Lock.WaitAsync();
+            Question nextQuestion;
+            try
+            {
+                self.CurrentQuestion = _questionService.GetTier(self.SkillTier).Generate();
+                nextQuestion = self.CurrentQuestion!;
+            }
+            finally { session.Lock.Release(); }
+
+            await _wsManager.SendToPlayer(playerId, new { type = "question", id = nextQuestion.Id, text = nextQuestion.Text });
         }
 
         private async Task HandleReleaseCharge(string playerId)
@@ -269,36 +332,44 @@ namespace ArixBack.Controllers
 
             if (self.ClassType != ArixBack.Models.ClassType.Berserker) return;
 
-            int charge = _classEffects.ReleaseCharge(self);
-            var hitResult = _classEffects.ApplyOnHit(opponent, charge);
+            int charge, damageDealt, damageTaken;
+            string? effect;
+            await session.Lock.WaitAsync();
+            try
+            {
+                charge = _classEffects.ReleaseCharge(self);
+                var hitResult = _classEffects.ApplyOnHit(opponent, charge);
+                opponent.Hp -= hitResult.DamageToSelf;
+                self.Hp -= hitResult.DamageToOpponent;
+                damageDealt = hitResult.DamageToSelf;
+                damageTaken = hitResult.DamageToOpponent;
+                effect = hitResult.EffectMessage;
+                session.Actions.Add(new MatchAction(DateTime.UtcNow, playerId, "charge_release",
+                    JsonSerializer.Serialize(new { damage = charge })));
+            }
+            finally { session.Lock.Release(); }
 
-            opponent.Hp -= hitResult.DamageToSelf;
-            self.Hp -= hitResult.DamageToOpponent;
-
-            session.Actions.Add(new MatchAction(DateTime.UtcNow, playerId, "charge_release",
-                JsonSerializer.Serialize(new { damage = charge })));
-
-            await SendHitBoth(session, self, opponent, hitResult.DamageToSelf, hitResult.DamageToOpponent, hitResult.EffectMessage);
+            await SendHitBoth(session, self.Hp, opponent.Hp, self.PlayerId, opponent.PlayerId, damageDealt, damageTaken, effect);
 
             await CheckGameOver(session, playerId, opponent.PlayerId);
         }
 
-        private async Task SendHitBoth(MatchSession session, PlayerMatchState self, PlayerMatchState opponent, int damageDealt, int damageTaken, string? effect)
+        private async Task SendHitBoth(MatchSession session, int selfHp, int opponentHp, string selfId, string opponentId, int damageDealt, int damageTaken, string? effect)
         {
-            await _wsManager.SendToPlayer(self.PlayerId, new
+            await _wsManager.SendToPlayer(selfId, new
             {
                 type = "hit",
-                yourHp = self.Hp,
-                opponentHp = opponent.Hp,
+                yourHp = selfHp,
+                opponentHp,
                 damageDealt,
                 damageTaken,
                 effect
             });
-            await _wsManager.SendToPlayer(opponent.PlayerId, new
+            await _wsManager.SendToPlayer(opponentId, new
             {
                 type = "hit",
-                yourHp = opponent.Hp,
-                opponentHp = self.Hp,
+                yourHp = opponentHp,
+                opponentHp = selfHp,
                 damageDealt = damageTaken,
                 damageTaken = damageDealt,
                 effect

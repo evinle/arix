@@ -12,8 +12,8 @@ namespace ArixBack.Services
     {
         public async Task EndMatch(MatchSession session, string winnerId, string loserId)
         {
-            if (session.Ended) return;
-            session.Ended = true;
+            if (Interlocked.CompareExchange(ref session.EndedFlag, 1, 0) != 0) return;
+            session.BleedCts.Cancel();
 
             var winner = session.GetPlayer(winnerId)!;
             var loser = session.GetPlayer(loserId)!;
@@ -36,7 +36,7 @@ namespace ArixBack.Services
                 StartedAt = session.StartedAt,
                 EndedAt = DateTime.UtcNow,
                 WinnerId = winnerId,
-                Actions = session.Actions
+                Actions = session.Actions.ToList()
             };
             await matchLogService.SaveLog(log);
 

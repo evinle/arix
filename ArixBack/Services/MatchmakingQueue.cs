@@ -124,21 +124,30 @@ namespace ArixBack.Services
 
         private async Task RunBleedLoop(MatchSession session)
         {
+            var ct = session.BleedCts.Token;
             while (!session.Ended)
             {
-                await Task.Delay(5000);
+                try { await Task.Delay(5000, ct); } catch (OperationCanceledException) { return; }
                 if (session.Ended) break;
 
                 foreach (var player in new[] { session.Player1, session.Player2 })
                 {
-                    int damage = _classEffects.TickBleed(player);
-                    if (damage <= 0) continue;
+                    await session.Lock.WaitAsync();
+                    int damage;
+                    int hp;
+                    try
+                    {
+                        damage = _classEffects.TickBleed(player);
+                        if (damage <= 0) continue;
+                        player.Hp -= damage;
+                        hp = player.Hp;
+                    }
+                    finally { session.Lock.Release(); }
 
-                    player.Hp -= damage;
                     session.Actions.Add(new MatchAction(DateTime.UtcNow, player.PlayerId, "bleed_tick", null));
-                    await _wsManager.SendToPlayer(player.PlayerId, new { type = "bleed_tick", yourHp = player.Hp, amount = damage });
+                    await _wsManager.SendToPlayer(player.PlayerId, new { type = "bleed_tick", yourHp = hp, amount = damage });
 
-                    if (player.Hp <= 0 && !session.Ended)
+                    if (hp <= 0 && !session.Ended)
                     {
                         var opponent = session.GetOpponent(player.PlayerId)!;
                         await _matchEndService.EndMatch(session, opponent.PlayerId, player.PlayerId);

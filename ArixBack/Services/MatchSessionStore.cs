@@ -28,8 +28,11 @@ namespace ArixBack.Services
         public PlayerMatchState Player1 { get; set; } = new();
         public PlayerMatchState Player2 { get; set; } = new();
         public DateTime StartedAt { get; set; } = DateTime.UtcNow;
-        public List<MatchAction> Actions { get; set; } = new();
-        public bool Ended { get; set; }
+        public ConcurrentBag<MatchAction> Actions { get; set; } = new();
+        public int EndedFlag;  // 0 = active, 1 = ended; use Interlocked
+        public bool Ended => EndedFlag == 1;
+        public SemaphoreSlim Lock { get; } = new SemaphoreSlim(1, 1);
+        public CancellationTokenSource BleedCts { get; } = new CancellationTokenSource();
 
         public PlayerMatchState? GetPlayer(string playerId) =>
             Player1.PlayerId == playerId ? Player1 : Player2.PlayerId == playerId ? Player2 : null;
